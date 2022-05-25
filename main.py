@@ -52,7 +52,13 @@ async def main():
 
     if args['ConsecutiveTime']:
         dictConsecutiveTime = {}
-
+    
+    if args['ReplyTimes']:
+        dictReplyTimes = {i: [] for i in range(24)}
+    
+    if args['DailyStaffMessages']:
+        dictDayStaffMessages = {}
+    
     file_reading_time = time.time()
     with open(FileName, 'r') as f:
         reader = csv.reader(f)
@@ -70,6 +76,10 @@ async def main():
             current_count = 0
             current_time = start_time
             interruptions = 5
+        
+        if args['ReplyTimes']:
+            last_reply_time = start_time
+            non_staff_replies = 0
             
 
         for row in [first_row] + list(reader):
@@ -111,10 +121,35 @@ async def main():
                     else:
                         current_count += 1
                         interruptions = 0
+
+            if args['ReplyTimes']:
+
+                if row[1] == "non staff replied":
+                    non_staff_replies += 1
+                    if non_staff_replies == args['IgnoreMessages']:
+                        last_reply_time = last_time
+                else:
+                    if non_staff_replies > args['IgnoreMessages']:
+                        dictReplyTimes[last_time.hour].append(last_time - last_reply_time)
+                    non_staff_replies, last_reply_time = 0, last_time
+            
+            if args['DailyStaffMessages']:
+                if row[1] != "non staff replied":
+                    if row[1] in dictDayStaffMessages:
+                        if last_time.day in dictDayStaffMessages[row[1]]:
+                            dictDayStaffMessages[row[1]][last_time.day] += 1
+                        else:
+                            dictDayStaffMessages[row[1]][last_time.day] = 1
+                    else:
+                        dictDayStaffMessages[row[1]] = {last_time.day: 1}
+                        
+                
+
+
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraph"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraph", "IgnoreMessages"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
@@ -157,8 +192,29 @@ async def main():
         plt.bar(l0, l1)
         plt.title('Total time spend in staff help in hours')
         plt.xticks(l0, l0, rotation='vertical')
+    
+    if args['ReplyTimes']:
+        l0 = [str(i) for i in dictReplyTimes.keys()]
+        l1 = [sum([j.total_seconds()/60 for j in i])/len(i) for i in dictReplyTimes.values()]
+        plt.subplot(*graph_placements[current_index])
+        current_index += 1
+        plt.bar(l0, l1)
+        plt.title(f'Avarage wait time on a question for a given hour. Ignores {args["IgnoreMessages"]} messages')
+        plt.xticks(l0, l0, rotation='vertical')
+    
+    if args['DailyStaffMessages']:
+        dictDayStaffMessages = await correct_dict_for_id(dictDayStaffMessages)
 
-    plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.5)
+        l0 = [i for i in dictDayStaffMessages.keys()]
+        l1 = [sum([j for j in value.values()])/(last_time.day - start_time.day) for value in dictDayStaffMessages.values()]
+        plt.subplot(*graph_placements[current_index])
+        current_index += 1
+        plt.bar(l0, l1)
+        plt.title(f'Avarage msg per staff on a day')
+        plt.xticks(l0, l0, rotation='vertical')
+
+
+    plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.75)
     plt.suptitle(f'Data from {start_time.date()} until {last_time.date()}')
 
     processing_dicts_time_end = time.time()

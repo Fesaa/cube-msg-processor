@@ -7,7 +7,10 @@ ALLOWED_ARGUMENTS = {'Daily': ['True', 'False'],
                      'TotalMessages': ['True', 'False'],
                      'SaveGraphs': ['True', 'False'],
                      'ShowExplanation': ['True', 'False'],
-                     'ShowGraph': ['True', 'False']
+                     'ShowGraph': ['True', 'False'],
+                     'ReplyTimes': ['True', 'False'],
+                     'IgnoreMessages': [str(i) for i in range(10)],
+                     'DailyStaffMessages': ['True', 'False']
                      }
 
 DEFAULT_ARGUMENTS = {'Daily': True,
@@ -16,6 +19,9 @@ DEFAULT_ARGUMENTS = {'Daily': True,
                      'SaveGraphs': False,
                      'ShowExplanation': True,
                      'ShowGraph': True,
+                     'ReplyTimes': False,
+                     'IgnoreMessages': 2,
+                     'DailyStaffMessages': False
                     }
 
 ARGUMENT_EXPLAIN = {'Daily': f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
@@ -25,7 +31,10 @@ ARGUMENT_EXPLAIN = {'Daily': f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs 
                     'TotalMessages': f'{Fore.CYAN}TotalMessages{Style.RESET_ALL}: Adds a graph to your figure with the total messages send in staff help per staff member. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
                     'SaveGraphs': f"{Fore.CYAN}SaveGraphs{Style.RESET_ALL}: Save your figure to a .png in your cwd. \nDefaults to{Fore.RED} False {Style.RESET_ALL}",
                     'ShowExplanation': f"{Fore.CYAN}ShowExplanation{Style.RESET_ALL}: Shows an explanation about your chosen options. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}",
-                    'ShowGraph': f'{Fore.CYAN}ShowGraph{Style.RESET_ALL}: Shows your graph after making it.\nDefaults to{Fore.GREEN} True {Style.RESET_ALL} '
+                    'ShowGraph': f'{Fore.CYAN}ShowGraph{Style.RESET_ALL}: Shows your graph after making it.\nDefaults to{Fore.GREEN} True {Style.RESET_ALL} ',
+                    'ReplyTimes': f'{Fore.CYAN}ReplyTimes{Style.RESET_ALL}: Adds a graphs to your figure with the avarage waiting time per timeslots of one hour.\nDefaults to{Fore.RED} False {Style.RESET_ALL}',
+                    'IgnoreMessages': f'{Fore.CYAN}IgnoreMessages{Style.RESET_ALL}: amount of non staff messages have to be send before we start counting wait time. This to take thank you messages into account.\nDefaults to{Fore.GREEN} 2 {Style.RESET_ALL} ',
+                    'DailyStaffMessages': f'{Fore.CYAN}DailyStaffMessages{Style.RESET_ALL}: Adds a graphs to your figure with the avarage amount of messages per day in the recorded period.\nDefaults to{Fore.RED} False {Style.RESET_ALL} '
                     }
 
 class InvalidArgument(Exception):
