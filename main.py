@@ -206,7 +206,7 @@ async def main():
         dictDayStaffMessages = await correct_dict_for_id(dictDayStaffMessages)
 
         l0 = [i for i in dictDayStaffMessages.keys()]
-        l1 = [sum([j for j in value.values()])/(last_time.day - start_time.day) for value in dictDayStaffMessages.values()]
+        l1 = [sum([j for j in value.values()])/(len([j for j in value.values()])) for value in dictDayStaffMessages.values()]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.bar(l0, l1)
