@@ -1,16 +1,31 @@
 from os.path import exists
+from colorama import Fore, Style
 import sys
 
-ALLOWED_ARGUMENTS = {'DailyAvarage': ['True', 'False'],
+ALLOWED_ARGUMENTS = {'Daily': ['True', 'False'],
                      'ConsecutiveTime': ['True', 'False'],
                      'TotalMessages': ['True', 'False'],
-                     'SaveGraphs': ['True', 'False']
+                     'SaveGraphs': ['True', 'False'],
+                     'ShowExplanation': ['True', 'False'],
+                     'ShowGraph': ['True', 'False']
                      }
 
-DEFAULT_ARGUMENTS = {'DailyAvarage': False,
+DEFAULT_ARGUMENTS = {'Daily': True,
                      'ConsecutiveTime': False,
                      'TotalMessages': True,
-                     'SaveGraphs': False
+                     'SaveGraphs': False,
+                     'ShowExplanation': True,
+                     'ShowGraph': True,
+                    }
+
+ARGUMENT_EXPLAIN = {'Daily': f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
+                    'ConsecutiveTime': f'{Fore.CYAN}ConsecutiveTime{Style.RESET_ALL}: Adds a graph to your figure with the total time spend by' \
+                                       f'a staff member in staff help. \nTime is added to the total if more than 5 messages have been send without ' \
+                                       f'5 messages by an other staff member between two messages. \nDefaults to{Fore.RED} False {Style.RESET_ALL}',
+                    'TotalMessages': f'{Fore.CYAN}TotalMessages{Style.RESET_ALL}: Adds a graph to your figure with the total messages send in staff help per staff member. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
+                    'SaveGraphs': f"{Fore.CYAN}SaveGraphs{Style.RESET_ALL}: Save your figure to a .png in your cwd. \nDefaults to{Fore.RED} False {Style.RESET_ALL}",
+                    'ShowExplanation': f"{Fore.CYAN}ShowExplanation{Style.RESET_ALL}: Shows an explanation about your chosen options. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}",
+                    'ShowGraph': f'{Fore.CYAN}ShowGraph{Style.RESET_ALL}: Shows your graph after making it.\nDefaults to{Fore.GREEN} True {Style.RESET_ALL} '
                     }
 
 class InvalidArgument(Exception):
@@ -20,7 +35,7 @@ class InvalidArgument(Exception):
         self.argument = argument
 
     def __str__(self):
-        return f'{self.argument} is not a valid option. A list of valids is:\n{" -- ".join(ALLOWED_ARGUMENTS.keys())}'
+        return f'{self.argument} is not a valid option. A list of valid options is:\n{" -- ".join(ALLOWED_ARGUMENTS.keys())}'
 
 class InvalidLayout(Exception):
 
