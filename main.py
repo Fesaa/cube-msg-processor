@@ -2,7 +2,7 @@ from init import on_start, ARGUMENT_EXPLAIN
 import matplotlib.pyplot as plt
 from datetime import datetime
 from colorama import Fore, Style
-import requests, csv, json, regex, asyncio
+import requests, csv, json, regex, asyncio, time
 
 id_cache = dict()
 
@@ -36,6 +36,7 @@ async def correct_dict_for_id(d: dict) -> dict:
     return {await get_name_from_id(int(key)) if key.isdigit() else key : value for key, value in d.items()}
 
 async def main():
+    total_run_time = time.time()
     args, FileName = on_start()
     
 
@@ -52,6 +53,7 @@ async def main():
     if args['ConsecutiveTime']:
         dictConsecutiveTime = {}
 
+    file_reading_time = time.time()
     with open(FileName, 'r') as f:
         reader = csv.reader(f)
 
@@ -109,6 +111,8 @@ async def main():
                     else:
                         current_count += 1
                         interruptions = 0
+    file_reading_time_end = time.time()
+    processing_dicts_time = time.time()
 
     amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraph"]])
 
@@ -156,6 +160,12 @@ async def main():
 
     plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.5)
     plt.suptitle(f'Data from {start_time.date()} until {last_time.date()}')
+
+    processing_dicts_time_end = time.time()
+
+    print(f"---Total Run Time {time.time() - total_run_time} seconds ---")
+    print(f"---File Reading Time {file_reading_time_end - file_reading_time} seconds ---")
+    print(f"---Making Plots Time {processing_dicts_time_end - processing_dicts_time} seconds ---")
 
     if args['SaveGraphs']:
         plt.savefig('out.png')
