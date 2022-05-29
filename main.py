@@ -158,6 +158,7 @@ async def main():
 
     if args['TotalMessages']:
         dictReply = await correct_dict_for_id(dictReply)
+        dictReply = dict(sorted(dictReply.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictReply.items())]))
 
@@ -184,6 +185,7 @@ async def main():
 
     if args['ConsecutiveTime']:
         dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime)
+        dictConsecutiveTime = dict(sorted(dictConsecutiveTime.items(), key=lambda item: item[1], reverse=True))
 
         l0 = [i for i in dictConsecutiveTime.keys()]
         l1 = [sum([i.total_seconds()/(3600) for i in dictConsecutiveTime[key]]) for key in l0]
