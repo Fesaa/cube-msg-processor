@@ -90,7 +90,7 @@ async def main():
             last_reply_time = start_time
             non_staff_replies = 0
         
-        if args['StartDate'] == 'Fist Date':
+        if args['StartDate'] == 'First Date':
             start_date = str(start_time.date())
         else:
             start_date = args['StartDate']
