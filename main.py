@@ -66,8 +66,8 @@ async def main():
         dictConsecutiveTime = {}
     
     if args['ReplyTimes']:
-        dictReplyTimes = {i: [] for i in range(24)}
-    
+        dictReplyTimes = {i: [datetime(year=2022, month=10, day=1, microsecond=1) - datetime(year=2022, month=10, day=1)] for i in range(24)}
+
     if args['DailyStaffMessages']:
         dictDayStaffMessages = {}
     
@@ -84,6 +84,7 @@ async def main():
             current_count = 0
             current_time = start_time
             interruptions = 5
+            ConsecutiveTime_non_staff_replies = 0
         
         if args['ReplyTimes']:
             last_reply_time = start_time
@@ -123,10 +124,11 @@ async def main():
                         if row[1] != current_staff:
                             if current_count > 5:
                                 if interruptions == 5:
-                                    if current_staff in dictConsecutiveTime:
-                                        dictConsecutiveTime[current_staff].append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time)
-                                    else:
-                                        dictConsecutiveTime[current_staff] = [datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time]
+                                    if current_staff != 0:
+                                        if current_staff in dictConsecutiveTime:
+                                            dictConsecutiveTime[current_staff].append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time)
+                                        else:
+                                            dictConsecutiveTime[current_staff] = [datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time]
                                     current_staff, current_count, current_time, interruptions = row[1], 1, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
                                 else:
                                     interruptions += 1
@@ -135,6 +137,18 @@ async def main():
                         else:
                             current_count += 1
                             interruptions = 0
+                    else:
+                        if ConsecutiveTime_non_staff_replies == 20:
+                            if current_staff != 0:
+                                if current_staff in dictConsecutiveTime:
+                                    dictConsecutiveTime[current_staff].append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time)
+                                else:
+                                    dictConsecutiveTime[current_staff] = [datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time]
+                            current_staff, current_count, current_time, interruptions = 0, 0, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
+                        else:
+                            ConsecutiveTime_non_staff_replies += 1
+
+
 
                 if args['ReplyTimes']:
 
@@ -161,7 +175,7 @@ async def main():
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraph", "IgnoreMessages"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraph", "IgnoreMessages", "StartDate"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
@@ -199,7 +213,7 @@ async def main():
         dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime)
         dictConsecutiveTime = dict(sorted(dictConsecutiveTime.items(), key=lambda item: item[1], reverse=True))
 
-        print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(sum([i.total_seconds()/(3600) for i in value]))}" for key, value in dictConsecutiveTime.items())]))
+        print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(sum([i.total_seconds()/(3600) for i in value]), 2)}" for key, value in dictConsecutiveTime.items())]))
 
         l0 = [i for i in dictConsecutiveTime.keys()]
         l1 = [sum([i.total_seconds()/(3600) for i in dictConsecutiveTime[key]]) for key in l0]
@@ -210,6 +224,9 @@ async def main():
         plt.xticks(l0, l0, rotation='vertical')
     
     if args['ReplyTimes']:
+
+        print(f'{Fore.MAGENTA}ReplyTimes{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(sum([i.total_seconds()/(60) for i in value])/len(value), 2)}" for key, value in dictReplyTimes.items())]))
+
         l0 = [str(i) for i in dictReplyTimes.keys()]
         l1 = [sum([j.total_seconds()/60 for j in i])/len(i) for i in dictReplyTimes.values()]
         plt.subplot(*graph_placements[current_index])
@@ -231,7 +248,7 @@ async def main():
 
 
     plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.75)
-    plt.suptitle(f'Data from {start_time.date()} until {last_time.date()}')
+    plt.suptitle(f'Data from {start_date} until {last_time.date()}')
 
     processing_dicts_time_end = time.time()
 
