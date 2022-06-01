@@ -2,42 +2,36 @@ from init import on_start, ARGUMENT_EXPLAIN
 import matplotlib.pyplot as plt
 from datetime import datetime
 from colorama import Fore, Style
-import requests, csv, json, asyncio, time
+import requests, csv, json, asyncio, time, warnings
+
+config = json.load(open('config.json'))
+TOKEN =config.get('TOKEN')
 
 id_cache = dict()
-
-
-# Need to find better way
-def correct_username(s: str) -> str:
-    while r'\u' in s:
-        for index, letter in enumerate(s):
-            if index < len(s):
-                if letter + s[index + 1] == r'\u':
-                    s = s[:index] + s[index + 6:]
-                    break
-    return s
-
+id_load_time = list()
 
 async def get_name_from_id(id: int) -> str:
-
-    config = json.load(open('config.json'))
+    start = time.time()
 
     if id in id_cache.keys():
         return id_cache[id]
     else:
         while True:
-            res = requests.get(f"https://discord.com/api/v9/users/{id}", headers={"Authorization": config.get('TOKEN')})
+            res = requests.get(f"https://discord.com/api/v9/users/{id}", headers={"Authorization": TOKEN})
 
             if str(res) == "<Response [429]>":
-                await asyncio.sleep(5)
+                time_out = res.json()['retry_after']
+                print(f'Rate limited while fetching discord username, trying again in {time_out} ...')
+                await asyncio.sleep(time_out)
 
             elif str(res) == "<Response [200]>":
-                username = correct_username(res.text.split('"username": "')[1].split('",')[0])
+                username = res.json()['username']
 
                 if len(username) > 15:
                     username = username[:15] + '...'
 
                 id_cache[id] = username
+                id_load_time.append(time.time() - start)
                 return username
 
             else:
@@ -49,7 +43,7 @@ async def correct_dict_for_id(d: dict) -> dict:
 
 async def main():
     total_run_time = time.time()
-    args, FileName = on_start()
+    args, FileNames = on_start()
     
 
     if args['ShowExplanation']:
@@ -72,110 +66,120 @@ async def main():
         dictDayStaffMessages = {}
     
     file_reading_time = time.time()
-    with open(FileName, 'r') as f:
-        reader = csv.reader(f)
 
-        first_row = next(reader)
-        start_time = datetime.strptime(first_row[0], '%Y-%m-%d %H:%M:%S.%f')
-        last_time = 0
-        
-        if args['ConsecutiveTime']:
-            current_staff = 0
-            current_count = 0
-            current_time = start_time
-            interruptions = 5
-            ConsecutiveTime_non_staff_replies = 0
-        
-        if args['ReplyTimes']:
-            last_reply_time = start_time
-            non_staff_replies = 0
-        
-        if args['StartDate'] == 'First Date':
-            start_date = str(start_time.date())
-        else:
-            start_date = args['StartDate']
-            
+    for index, FileName in enumerate(FileNames):
 
-        for row in [first_row] + list(reader):
-            last_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
-        
-            if start_date <= str(last_time.date()):
+        with open(FileName, 'r') as f:
+            reader = csv.reader(f)
 
-                if args['TotalMessages']:
-                    if row[1] == 'non staff replied':
-                        dictReply['Q'] += 1
-                    else:
-                        dictReply['S'] += 1
-                        if row[1] in dictReply:
-                            dictReply[row[1]] += 1
-                        else:
-                            dictReply[row[1]] = 1
+            first_row = next(reader)
+            start_time = datetime.strptime(first_row[0], '%Y-%m-%d %H:%M:%S.%f')
+            last_time = 0
 
-                if args['Daily']:
-                    if row[1] != 'non staff replied':
-                        day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
-                        if day in dictDayMessages.keys():
-                            dictDayMessages[day] += 1
-                        else:
-                            dictDayMessages[day] = 1
-
+            if index == 0:
                 if args['ConsecutiveTime']:
-                    if row[1] != 'non staff replied':
-                        if row[1] != current_staff:
-                            if current_count > 5:
-                                if interruptions == 5:
-                                    if current_staff != 0:
-                                        if current_staff in dictConsecutiveTime:
-                                            dictConsecutiveTime[current_staff].append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time)
-                                        else:
-                                            dictConsecutiveTime[current_staff] = [datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time]
-                                    current_staff, current_count, current_time, interruptions = row[1], 1, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
-                                else:
-                                    interruptions += 1
-                            else:
-                                current_staff, current_count, current_time, interruptions = row[1], 1, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
-                        else:
-                            current_count += 1
-                            interruptions = 0
-                    else:
-                        if ConsecutiveTime_non_staff_replies == 20:
-                            if current_staff != 0:
-                                if current_staff in dictConsecutiveTime:
-                                    dictConsecutiveTime[current_staff].append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time)
-                                else:
-                                    dictConsecutiveTime[current_staff] = [datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time]
-                            current_staff, current_count, current_time, interruptions = 0, 0, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
-                        else:
-                            ConsecutiveTime_non_staff_replies += 1
-
-
-
-                if args['ReplyTimes']:
-
-                    if row[1] == "non staff replied":
-                        non_staff_replies += 1
-                        if non_staff_replies == args['IgnoreMessages']:
-                            last_reply_time = last_time
-                    else:
-                        if non_staff_replies > args['IgnoreMessages']:
-                            dictReplyTimes[last_time.hour].append(last_time - last_reply_time)
-                        non_staff_replies, last_reply_time = 0, last_time
+                    current_staff = 0
+                    current_count = 0
+                    current_time = start_time
+                    interruptions = 5
+                    ConsecutiveTime_non_staff_replies = 0
                 
-                if args['DailyStaffMessages']:
-                    if row[1] != "non staff replied":
-                        if row[1] in dictDayStaffMessages:
-                            if last_time.day in dictDayStaffMessages[row[1]]:
-                                dictDayStaffMessages[row[1]][last_time.day] += 1
-                            else:
-                                dictDayStaffMessages[row[1]][last_time.day] = 1
+                if args['ReplyTimes']:
+                    last_reply_time = start_time
+                    non_staff_replies = 0
+                
+                if args['StartDate'] == 'First Date':
+                    start_date = str(start_time.date())
+                else:
+                    start_date = args['StartDate']
+                
+
+            for row in [first_row] + list(reader):
+                last_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
+            
+                if start_date <= str(last_time.date()):
+
+                    if args['TotalMessages']:
+                        if row[1] == 'non staff replied':
+                            dictReply['Q'] += 1
                         else:
-                            dictDayStaffMessages[row[1]] = {last_time.day: 1}
+                            dictReply['S'] += 1
+                            if row[1] in dictReply:
+                                dictReply[row[1]] += 1
+                            else:
+                                dictReply[row[1]] = 1
+
+                    if args['Daily']:
+                        if row[1] != 'non staff replied':
+                            day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
+                            if day in dictDayMessages.keys():
+                                dictDayMessages[day] += 1
+                            else:
+                                dictDayMessages[day] = 1
+
+                    if args['ConsecutiveTime']:
+                        if row[1] != 'non staff replied':
+                            if row[1] != current_staff:
+                                if current_count > 5:
+                                    if interruptions == 5:
+                                        if current_staff != 0:
+                                            if current_staff in dictConsecutiveTime:
+                                                dictConsecutiveTime[current_staff].append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time)
+                                            else:
+                                                dictConsecutiveTime[current_staff] = [datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time]
+                                        current_staff, current_count, current_time, interruptions = row[1], 1, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
+                                    else:
+                                        interruptions += 1
+                                else:
+                                    current_staff, current_count, current_time, interruptions = row[1], 1, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
+                            else:
+                                current_count += 1
+                                interruptions = 0
+                        else:
+                            if (datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time).total_seconds()/60 > 10 and current_staff != 0:
+                                timedelta = datetime(year=1, month=1, day=1, minute=10) - datetime(year=1, month=1, day=1, minute=0)
+                                if current_staff in dictConsecutiveTime:
+                                    dictConsecutiveTime[current_staff].append(timedelta)
+                                else:
+                                    dictConsecutiveTime[current_staff] = [timedelta]
+                            elif ConsecutiveTime_non_staff_replies == 20:
+                                if current_staff != 0:
+                                    if current_staff in dictConsecutiveTime:
+                                        dictConsecutiveTime[current_staff].append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time)
+                                    else:
+                                        dictConsecutiveTime[current_staff] = [datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f') - current_time]
+                                current_staff, current_count, current_time, interruptions = 0, 0, datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'), 0
+                            else:
+                                ConsecutiveTime_non_staff_replies += 1
+
+
+
+                    if args['ReplyTimes']:
+
+                        if row[1] == "non staff replied":
+                            non_staff_replies += 1
+                            if non_staff_replies == args['IgnoreMessages']:
+                                last_reply_time = last_time
+                        else:
+                            if non_staff_replies > args['IgnoreMessages']:
+                                dictReplyTimes[last_time.hour].append(last_time - last_reply_time)
+                            non_staff_replies, last_reply_time = 0, last_time
+                    
+                    if args['DailyStaffMessages']:
+                        if row[1] != "non staff replied":
+                            if row[1] in dictDayStaffMessages:
+                                if last_time.day in dictDayStaffMessages[row[1]]:
+                                    dictDayStaffMessages[row[1]][last_time.day] += 1
+                                else:
+                                    dictDayStaffMessages[row[1]][last_time.day] = 1
+                            else:
+                                dictDayStaffMessages[row[1]] = {last_time.day: 1}
                             
 
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraph", "IgnoreMessages", "StartDate"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
@@ -188,7 +192,7 @@ async def main():
 
         print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictReply.items())]))
 
-        l0 = [i for i in dictReply.keys() if i not in ['Q', 'S']]
+        l0 = [i for i in dictReply.keys() if i not in ['Q', 'S'] and dictReply[i] > 10]
         l1 = [dictReply[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
@@ -215,7 +219,7 @@ async def main():
 
         print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(sum([i.total_seconds()/(3600) for i in value]), 2)}" for key, value in dictConsecutiveTime.items())]))
 
-        l0 = [i for i in dictConsecutiveTime.keys()]
+        l0 = [key for key in dictConsecutiveTime.keys() if sum([i.total_seconds()/(3600) for i in dictConsecutiveTime[key]]) > 0.5]
         l1 = [sum([i.total_seconds()/(3600) for i in dictConsecutiveTime[key]]) for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
@@ -252,14 +256,16 @@ async def main():
 
     processing_dicts_time_end = time.time()
 
-    print(f"---Total Run Time {time.time() - total_run_time} seconds ---")
-    print(f"---File Reading Time {file_reading_time_end - file_reading_time} seconds ---")
-    print(f"---Making Plots Time {processing_dicts_time_end - processing_dicts_time} seconds ---")
+    print(f"--- Total Run Time {time.time() - total_run_time} seconds ---")
+    print(f"--- File Reading Time {file_reading_time_end - file_reading_time} seconds ---")
+    print(f"--- Making Plots Time {processing_dicts_time_end - processing_dicts_time} seconds ---")
+    print(f"--- Fetching ids {sum(id_load_time)} seconds ---")
 
     if args['SaveGraphs']:
         plt.savefig('out.png')
 
-    if args['ShowGraph']:
+    if args['ShowGraphs']:
+        warnings.filterwarnings("ignore")
         plt.show()
 
 if __name__ == '__main__':
