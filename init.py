@@ -9,7 +9,7 @@ ALLOWED_ARGUMENTS = {'Daily': {'type': 'options', 'options': ['True', 'False']},
                     'TotalMessages': {'type': 'options', 'options': ['True', 'False']},
                     'SaveGraphs': {'type': 'options', 'options': ['True', 'False']},
                     'ShowExplanation': {'type': 'options', 'options': ['True', 'False']},
-                    'ShowGraph': {'type': 'options', 'options': ['True', 'False']},
+                    'ShowGraphs': {'type': 'options', 'options': ['True', 'False']},
                     'ReplyTimes': {'type': 'options', 'options': ['True', 'False']},
                     'IgnoreMessages': {'type': 'options', 'options': [str(i) for i in range(10)]},
                     'DailyStaffMessages': {'type': 'options', 'options': ['True', 'False']},
@@ -21,7 +21,7 @@ DEFAULT_ARGUMENTS = {'Daily': True,
                      'TotalMessages': True,
                      'SaveGraphs': False,
                      'ShowExplanation': True,
-                     'ShowGraph': True,
+                     'ShowGraphs': True,
                      'ReplyTimes': False,
                      'IgnoreMessages': 2,
                      'DailyStaffMessages': False,
@@ -35,7 +35,7 @@ ARGUMENT_EXPLAIN = {'Daily': f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs 
                     'TotalMessages': f'{Fore.CYAN}TotalMessages{Style.RESET_ALL}: Adds a graph to your figure with the total messages send in staff help per staff member. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
                     'SaveGraphs': f"{Fore.CYAN}SaveGraphs{Style.RESET_ALL}: Save your figure to a .png in your cwd. \nDefaults to{Fore.RED} False {Style.RESET_ALL}",
                     'ShowExplanation': f"{Fore.CYAN}ShowExplanation{Style.RESET_ALL}: Shows an explanation about your chosen options. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}",
-                    'ShowGraph': f'{Fore.CYAN}ShowGraph{Style.RESET_ALL}: Shows your graph after making it.\nDefaults to{Fore.GREEN} True {Style.RESET_ALL} ',
+                    'ShowGraphs': f'{Fore.CYAN}ShowGraph{Style.RESET_ALL}: Shows your graph after making it.\nDefaults to{Fore.GREEN} True {Style.RESET_ALL} ',
                     'ReplyTimes': f'{Fore.CYAN}ReplyTimes{Style.RESET_ALL}: Adds a graphs to your figure with the average waiting time per time slots of one hour.\nDefaults to{Fore.RED} False {Style.RESET_ALL}',
                     'IgnoreMessages': f'{Fore.CYAN}IgnoreMessages{Style.RESET_ALL}: amount of non staff messages have to be send before we start counting wait time. This to take thank you messages into account.\nDefaults to{Fore.GREEN} 2 {Style.RESET_ALL} ',
                     'DailyStaffMessages': f'{Fore.CYAN}DailyStaffMessages{Style.RESET_ALL}: Adds a graphs to your figure with the average amount of messages per day in the recorded period.\nDefaults to{Fore.RED} False {Style.RESET_ALL} ',
@@ -115,13 +115,13 @@ def on_start() -> Union[dict, str]:
 
     try:
         if sys.argv[1].split('=')[0] == "FileName":
-            FileName = sys.argv[1].split('=')[1]
+            FileNames = sys.argv[1].split('=')[1].split(',')
         else:
             raise IndexError
     except IndexError:
         raise CustomFileError("Your first argument must be the filename:\nFileName=myFile.csv")
     else:
-        if exists(FileName):
+        if all(exists(FileName) for FileName in FileNames):
             args = {i.split('=')[0]: arg_correction(i.split('=')[1]) for i in sys.argv[2::] if arg_check(i)}
         else:
             raise CustomFileError('Please provide a valid FileName! Or you in the cwd?')
@@ -130,5 +130,5 @@ def on_start() -> Union[dict, str]:
         if argument not in args.keys():
             args[argument] = DEFAULT_ARGUMENTS[argument]
     
-    return args, FileName
+    return args, FileNames
 
