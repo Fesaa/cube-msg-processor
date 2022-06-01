@@ -28,10 +28,10 @@ DEFAULT_ARGUMENTS = {'Daily': True,
                      'StartDate': 'First Date'
                     }
 
-ARGUMENT_EXPLAIN = {'Daily': f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
+ARGUMENT_EXPLAIN = {'Daily': f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day.\nMinimum of {Fore.MAGENTA}10{Style.RESET_ALL} messages are needed to be displayed on the graph.\nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
                     'ConsecutiveTime': f'{Fore.CYAN}ConsecutiveTime{Style.RESET_ALL}: Adds a graph to your figure with the total time spend by ' \
                                        f'a staff member in staff help. \nTime is added to the total if more than 5 messages have been send without ' \
-                                       f'5 messages by an other staff member between two messages. \nDefaults to{Fore.RED} False {Style.RESET_ALL}',
+                                       f'5 messages by an other staff member between two messages.\nMinimum of {Fore.MAGENTA}30min {Style.RESET_ALL} is needed to be displayed on the graph.\nDefaults to{Fore.RED} False {Style.RESET_ALL}',
                     'TotalMessages': f'{Fore.CYAN}TotalMessages{Style.RESET_ALL}: Adds a graph to your figure with the total messages send in staff help per staff member. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}',
                     'SaveGraphs': f"{Fore.CYAN}SaveGraphs{Style.RESET_ALL}: Save your figure to a .png in your cwd. \nDefaults to{Fore.RED} False {Style.RESET_ALL}",
                     'ShowExplanation': f"{Fore.CYAN}ShowExplanation{Style.RESET_ALL}: Shows an explanation about your chosen options. \nDefaults to{Fore.GREEN} True {Style.RESET_ALL}",
