@@ -176,7 +176,7 @@ async def main():
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
@@ -184,17 +184,18 @@ async def main():
     print(f'Data from {start_date} until {last_time.date()}')
 
     if args['TotalMessages']:
+        dictReply = {key: value for key, value in dictReply.items() if value > args['MinMsg']}
         dictReply = await correct_dict_for_id(dictReply)
         dictReply = dict(sorted(dictReply.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictReply.items())]))
 
-        l0 = [i for i in dictReply.keys() if i not in ['Q', 'S'] and dictReply[i] > 10]
+        l0 = [i for i in dictReply.keys() if i not in ['Q', 'S']]
         l1 = [dictReply[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.bar(l0, l1)
-        plt.title('Amount of msg per staff member')
+        plt.title('Amount of msg per member')
         plt.xticks(l0, l0, rotation='vertical')
         
 
@@ -207,7 +208,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.bar(l0, l1)
-        plt.title('Amount msg by staff per day')
+        plt.title('Amount msg by per day')
         plt.xticks(l0, l0, rotation='vertical')
 
     if args['ConsecutiveTime']:
@@ -221,7 +222,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.bar(l0, l1)
-        plt.title('Total time spend in staff help in hours')
+        plt.title('Total time spend in hours')
         plt.xticks(l0, l0, rotation='vertical')
     
     if args['ReplyTimes']:
@@ -244,7 +245,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.bar(l0, l1)
-        plt.title(f'Avarage msg per staff on a day')
+        plt.title(f'Avarage msg per member on a day')
         plt.xticks(l0, l0, rotation='vertical')
 
 
