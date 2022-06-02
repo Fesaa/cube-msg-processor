@@ -169,7 +169,7 @@ async def main():
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
@@ -211,7 +211,7 @@ async def main():
         print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(
             f"{key}: {round(value, 2)}" for key, value in dictConsecutiveTime.items())]))
 
-        l0 = [key for key, value in dictConsecutiveTime.items() if value > 0.5]
+        l0 = [key for key, value in dictConsecutiveTime.items() if value > args['MinTime']]
         l1 = [dictConsecutiveTime[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
