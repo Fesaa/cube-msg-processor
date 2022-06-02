@@ -151,11 +151,11 @@ async def main():
                                 time_difference: timedelta = last_time - info['last_time']
 
                                 if time_difference.total_seconds()/60 > 10:
-                                    if info['replies'] > 5:
-                                        if staff_user_id in dictConsecutiveTime:
-                                            dictConsecutiveTime[staff_user_id].append(info['last_time'] - info['start_time'] + timedelta(minutes=10))
-                                        else:
-                                            dictConsecutiveTime[staff_user_id] = [info['last_time'] - info['start_time'] + timedelta(minutes=10)]
+                                    
+                                    if staff_user_id in dictConsecutiveTime:
+                                        dictConsecutiveTime[staff_user_id].append(info['last_time'] - info['start_time'])
+                                    else:
+                                        dictConsecutiveTime[staff_user_id] = [info['last_time'] - info['start_time']]
 
                                     to_remove.append(staff_user_id)
                             
