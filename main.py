@@ -126,38 +126,21 @@ async def main():
 
                         if row[1] != 'non staff replied':
                             if row[1] not in active_staff_members:
-                                active_staff_members[row[1]] = {'replies': 0, 'interruptions': 0, 'start_time': last_time, 'last_time': last_time}
+                                active_staff_members[row[1]] = {'start_time': last_time, 'last_time': last_time}
+                            
+                            active_staff_members[row[1]]['last_time'] = last_time
 
-                            for staff_user_id, info in active_staff_members.items():
-                                if row[1] == staff_user_id:
-                                    info['replies'] += 1
-                                    info['interruptions'] = 0
-                                    info['last_time'] = last_time
+                        for staff_user_id, info in active_staff_members.items():
+                            time_difference: timedelta = last_time - info['last_time']
 
+                            if time_difference.total_seconds()/60 > 10:
+                                
+                                if staff_user_id in dictConsecutiveTime:
+                                    dictConsecutiveTime[staff_user_id].append(info['last_time'] - info['start_time'])
                                 else:
-                                    info['interruptions'] += 1
+                                    dictConsecutiveTime[staff_user_id] = [info['last_time'] - info['start_time']]
 
-                                    if info['interruptions'] == 5:
-                                        if staff_user_id in dictConsecutiveTime:
-                                            dictConsecutiveTime[staff_user_id].append(info['last_time'] - info['start_time'])
-                                        else:
-                                            dictConsecutiveTime[staff_user_id] = [info['last_time']- info['start_time']]
-                                        
-                                        to_remove.append(staff_user_id)
-
-                        else:
-
-                            for staff_user_id, info in active_staff_members.items():
-                                time_difference: timedelta = last_time - info['last_time']
-
-                                if time_difference.total_seconds()/60 > 10:
-                                    
-                                    if staff_user_id in dictConsecutiveTime:
-                                        dictConsecutiveTime[staff_user_id].append(info['last_time'] - info['start_time'])
-                                    else:
-                                        dictConsecutiveTime[staff_user_id] = [info['last_time'] - info['start_time']]
-
-                                    to_remove.append(staff_user_id)
+                                to_remove.append(staff_user_id)
                             
                         for staff_user_id in to_remove:
                             active_staff_members.pop(staff_user_id)
