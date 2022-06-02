@@ -3,13 +3,13 @@ from typing import List
 from colorama import Fore, Style
 
 command_line_options = CommandLineOptions()
-command_line_options.add_option(CommandLineOption('FileName', regex=r'\w*', return_type=List[str], info=f'Filenames to process'))
+command_line_options.add_option(CommandLineOption('FileName', regex=r'\w*', return_type=List[str], info=f'{Fore.CYAN}FileName{Style.RESET_ALL}: Filenames to process'))
 command_line_options.add_option(CommandLineOption('Daily', regex=r'\b(False|True)\b', default_option=True, return_type=bool,
                                 info=f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day.\nMinimum of {Fore.MAGENTA}10{Style.RESET_ALL} messages are needed to be displayed on the graph.'))
 command_line_options.add_option(CommandLineOption('ConsecutiveTime', regex=r'\b(False|True)\b', default_option=False, return_type=bool,
                                 info=f'{Fore.CYAN}ConsecutiveTime{Style.RESET_ALL}: Adds a graph to your figure with the total time spend by ' \
                                        f'a staff member in staff help. \nTime is added to the total if more than 5 messages have been send without ' \
-                                       f'5 messages by an other staff member between two messages.\nMinimum of {Fore.MAGENTA}30min {Style.RESET_ALL} is needed to be displayed on the graph.'))
+                                       f'5 messages by an other staff member between two messages.\nMinimum of {Fore.MAGENTA}30min {Style.RESET_ALL}is needed to be displayed on the graph.'))
 command_line_options.add_option(CommandLineOption('TotalMessages', regex=r'\b(False|True)\b', default_option=True, return_type=bool,
                                 info=f'{Fore.CYAN}TotalMessages{Style.RESET_ALL}: Adds a graph to your figure with the total messages send in staff help per staff member.'))
 command_line_options.add_option(CommandLineOption('SaveGraphs', regex=r'\b(False|True)\b', default_option=False, return_type=bool,
