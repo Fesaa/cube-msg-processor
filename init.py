@@ -24,7 +24,7 @@ command_line_options.add_option(CommandLineOption('DailyStaffMessages', regex=r'
                                 info=f'{Fore.CYAN}DailyStaffMessages{Style.RESET_ALL}: Adds a graphs to your figure with the average amount of messages per day in the recorded period.'))
 command_line_options.add_option(CommandLineOption('StartDate', regex=r'^\d{4}[\-\/\s]?((((0[13578])|(1[02]))[\-\/\s]?(([0-2][0-9])|(3[01])))|(((0[469])|(11))[\-\/\s]?(([0-2][0-9])|(30)))|(02[\-\/\s]?[0-2][0-9]))$',
                                 default_option='First Date', return_type=str, info=f'{Fore.CYAN}StartDate{Style.RESET_ALL}: Force a date to start registering data from. A data later than the last recorded day will just return no information.'))                                
-command_line_options.add_option(CommandLineOption('MinMsg', regex=r'\b(\d{1,3})\b', default_option=10, return_type=int,
+command_line_options.add_option(CommandLineOption('MinMsg', regex=r'\b(\d{1,3})\b', default_option=1, return_type=int,
                                 info=f'{Fore.CYAN}MinMsg{Style.RESET_ALL}: Minimal messages send in the channel to appear on TotalMessages graph.'))
 
 
