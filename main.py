@@ -70,8 +70,8 @@ async def main():
     if args['ReplyTimes']:
         dictReplyTimes = {i: [delta] for i in range(24)}
 
-    if args['DailyStaffMessages']:
-        dictDayStaffMessages = {}
+    if args['DailyMessages']:
+        dictDailyMessages = {}
 
     file_reading_time = time.time()
 
@@ -156,15 +156,15 @@ async def main():
                                 dictReplyTimes[last_time.hour].append(last_time - last_reply_time)
                             non_staff_replies, last_reply_time = 0, last_time
 
-                    if args['DailyStaffMessages']:
+                    if args['DailyMessages']:
                         if row[1] != "non staff replied":
-                            if row[1] in dictDayStaffMessages:
-                                if last_time.day in dictDayStaffMessages[row[1]]:
-                                    dictDayStaffMessages[row[1]][last_time.day] += 1
+                            if row[1] in dictDailyMessages:
+                                if last_time.day in dictDailyMessages[row[1]]:
+                                    dictDailyMessages[row[1]][last_time.day] += 1
                                 else:
-                                    dictDayStaffMessages[row[1]][last_time.day] = 1
+                                    dictDailyMessages[row[1]][last_time.day] = 1
                             else:
-                                dictDayStaffMessages[row[1]] = {last_time.day: 1}
+                                dictDailyMessages[row[1]] = {last_time.day: 1}
 
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
@@ -183,13 +183,13 @@ async def main():
 
         print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictReply.items())]))
 
-        l0 = [i for i in dictReply.keys() if i not in ['Q', 'S'] and dictReply[i] > args['MinMsg']]
+        l0 = list(reversed([i for i in dictReply.keys() if i not in ['Q', 'S'] and dictReply[i] > args['MinMsg']]))
         l1 = [dictReply[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.bar(l0, l1)
+        plt.barh(l0, l1)
         plt.title('Amount of msg per member')
-        plt.xticks(l0, l0, rotation='vertical')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
     if args['Daily']:
 
@@ -199,9 +199,9 @@ async def main():
         l1 = dictDayMessages.values()
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.bar(l0, l1)
+        plt.barh(l0, l1)
         plt.title('Amount msg by per day')
-        plt.xticks(l0, l0, rotation='vertical')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
     if args['ConsecutiveTime']:
         dictConsecutiveTime = {key: sum([i.total_seconds()/(3600) for i in value]) for key, value in dictConsecutiveTime.items()}
@@ -211,13 +211,13 @@ async def main():
         print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(
             f"{key}: {round(value, 2)}" for key, value in dictConsecutiveTime.items())]))
 
-        l0 = [key for key, value in dictConsecutiveTime.items() if value > args['MinTime']]
+        l0 = list(reversed([key for key, value in dictConsecutiveTime.items() if value > args['MinTime']]))
         l1 = [dictConsecutiveTime[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.bar(l0, l1)
+        plt.barh(l0, l1)
         plt.title('Total time spend in hours')
-        plt.xticks(l0, l0, rotation='vertical')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
     if args['ReplyTimes']:
 
@@ -228,22 +228,26 @@ async def main():
         l1 = [sum([j.total_seconds()/60 for j in i])/len(i) for i in dictReplyTimes.values()]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.bar(l0, l1)
+        plt.barh(l0, l1)
         plt.title(f'Avarage wait time on a question for a given hour. Ignores {args["IgnoreMessages"]} messages')
-        plt.xticks(l0, l0, rotation='vertical')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
-    if args['DailyStaffMessages']:
-        dictDayStaffMessages = await correct_dict_for_id(dictDayStaffMessages)
+    if args['DailyMessages']:
+        dictDailyMessages = {key: sum([j for j in value.values()])/(len([j for j in value.values()])) for key, value in dictDailyMessages.items()}
+        dictDailyMessages = await correct_dict_for_id(dictDailyMessages)
+        dictDailyMessages = dict(sorted(dictDailyMessages.items(), key=lambda item: item[1], reverse=True))
 
-        l0 = [i for i in dictDayStaffMessages.keys()]
-        l1 = [sum([j for j in value.values()])/(len([j for j in value.values()])) for value in dictDayStaffMessages.values()]
+        print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
+
+        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > args['MinMsg']/5]))
+        l1 = [dictDailyMessages[i] for i in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.bar(l0, l1)
+        plt.barh(l0, l1)
         plt.title(f'Avarage msg per member on a day')
-        plt.xticks(l0, l0, rotation='vertical')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
-    plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.75)
+    plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
     plt.suptitle(f'Data from {start_date} until {last_time.date()}')
 
     processing_dicts_time_end = time.time()

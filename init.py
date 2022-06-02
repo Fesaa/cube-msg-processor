@@ -20,12 +20,12 @@ command_line_options.add_option(CommandLineOption('ReplyTimes', regex=r'\b(False
                                 info=f'{Fore.CYAN}ReplyTimes{Style.RESET_ALL}: Adds a graphs to your figure with the average waiting time per time slots of one hour.'))
 command_line_options.add_option(CommandLineOption('IgnoreMessages', regex=r'\b([0-9]|1[0-9])\b', default_option=2, return_type=int,
                                 info=f'{Fore.CYAN}IgnoreMessages{Style.RESET_ALL}: amount of non staff messages have to be send before we start counting wait time. This to take thank you messages into account.'))
-command_line_options.add_option(CommandLineOption('DailyStaffMessages', regex=r'\b(False|True)\b', default_option=False, return_type=bool,
-                                info=f'{Fore.CYAN}DailyStaffMessages{Style.RESET_ALL}: Adds a graphs to your figure with the average amount of messages per day in the recorded period.'))
+command_line_options.add_option(CommandLineOption('DailyMessages', regex=r'\b(False|True)\b', default_option=False, return_type=bool,
+                                info=f'{Fore.CYAN}DailyMessages{Style.RESET_ALL}: Adds a graphs to your figure with the average amount of messages per day in the recorded period.'))
 command_line_options.add_option(CommandLineOption('StartDate', regex=r'^\d{4}[\-\/\s]?((((0[13578])|(1[02]))[\-\/\s]?(([0-2][0-9])|(3[01])))|(((0[469])|(11))[\-\/\s]?(([0-2][0-9])|(30)))|(02[\-\/\s]?[0-2][0-9]))$',
                                 default_option='First Date', return_type=str, info=f'{Fore.CYAN}StartDate{Style.RESET_ALL}: Force a date to start registering data from. A data later than the last recorded day will just return no information.'))                                
 command_line_options.add_option(CommandLineOption('MinMsg', regex=r'\b(\d{1,3})\b', default_option=10, return_type=int,
                                 info=f'{Fore.CYAN}MinMsg{Style.RESET_ALL}: Minimal messages send in the channel to appear on TotalMessages graph.'))
-command_line_options.add_option(CommandLineOption('MinTime', regex=r'\b(\d{1,2}\.\d{1,2})\b', default_option=0.5, return_type=float, info=f'{Fore.CYAN}MinTime{Style.RESET_ALL}: Minium time spend in the channel to be displayed on the graph.'))
+command_line_options.add_option(CommandLineOption('MinTime', regex=r'\b(\d{1,2}\.{0,1}\d{0,2})\b', default_option=0.5, return_type=float, info=f'{Fore.CYAN}MinTime{Style.RESET_ALL}: Minium time spend in the channel to be displayed on the graph.'))
 
 options = command_line_options.on_start()
