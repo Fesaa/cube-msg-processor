@@ -194,13 +194,13 @@ async def main():
     print(f'Data from {start_date} until {last_time.date()}')
 
     if args['TotalMessages']:
-        dictReply = {key: value for key, value in dictReply.items() if value > args['MinMsg']}
+        dictReply = {key: value for key, value in dictReply.items()}
         dictReply = await correct_dict_for_id(dictReply)
         dictReply = dict(sorted(dictReply.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictReply.items())]))
 
-        l0 = [i for i in dictReply.keys() if i not in ['Q', 'S']]
+        l0 = [i for i in dictReply.keys() if i not in ['Q', 'S'] and dictReply[i] > args['MinMsg']]
         l1 = [dictReply[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
