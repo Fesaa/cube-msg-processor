@@ -1,4 +1,4 @@
-from init import on_start, ARGUMENT_EXPLAIN
+from init import options
 import matplotlib.pyplot as plt
 from datetime import datetime
 from colorama import Fore, Style
@@ -43,12 +43,9 @@ async def correct_dict_for_id(d: dict) -> dict:
 
 async def main():
     total_run_time = time.time()
-    args, FileNames = on_start()
-    
+    FileNames = options['FileName']
 
-    if args['ShowExplanation']:
-        print("\n\n".join([ARGUMENT_EXPLAIN[key] for key in args.keys() if args[key]]))
-        print('==================================================\n')
+    args = options
 
     if args['TotalMessages']:
         dictReply = {"Q": 0, "S": 0}
@@ -179,7 +176,7 @@ async def main():
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
