@@ -1,4 +1,5 @@
-from module.CommandLineOptions import CommandLineOption, CommandLineOptions
+from CommandLineOptions import CommandLineOptions
+from CommandLineOptions.option import CommandLineOption
 from typing import List
 from colorama import Fore, Style
 
