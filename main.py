@@ -14,12 +14,18 @@ config = json.load(open('config.json', encoding='utf-8'))
 TOKEN = config.get('TOKEN')
 
 ID_CACHE = {}
+EXTERNAL_ID_CACHE = json.load(open('external_id_cache.json', encoding='ISO 8859-1'))
 ID_LOAD_TIME = []
 
 
-async def get_name_from_id(user_id: int) -> str:
+async def get_name_from_id(user_id: int, external: bool) -> str:
     start = time.time()
 
+    if external:
+        if str(user_id) in EXTERNAL_ID_CACHE:
+            ID_LOAD_TIME.append(time.time() - start)
+            return EXTERNAL_ID_CACHE[str(user_id)]
+    
     if user_id in ID_CACHE:
         return ID_CACHE[user_id]
     else:
@@ -47,8 +53,8 @@ async def get_name_from_id(user_id: int) -> str:
                 await asyncio.sleep(1)
 
 
-async def correct_dict_for_id(d: dict) -> dict:
-    return {await get_name_from_id(int(key)) if key.isdigit() else key: value for key, value in d.items()}
+async def correct_dict_for_id(d: dict, external: bool) -> dict:
+    return {await get_name_from_id(int(key), external) if key.isdigit() else key: value for key, value in d.items()}
 
 delta = timedelta(microseconds=1)
 
@@ -169,7 +175,7 @@ async def main():
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "SaveToJson"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
@@ -178,7 +184,7 @@ async def main():
 
     if args['TotalMessages']:
         dictReply = {key: value for key, value in dictReply.items()}
-        dictReply = await correct_dict_for_id(dictReply)
+        dictReply = await correct_dict_for_id(dictReply, not args['SaveToJson'])
         dictReply = dict(sorted(dictReply.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictReply.items())]))
@@ -205,7 +211,7 @@ async def main():
 
     if args['ConsecutiveTime']:
         dictConsecutiveTime = {key: sum([i.total_seconds()/(3600) for i in value]) for key, value in dictConsecutiveTime.items()}
-        dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime)
+        dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime, not args['SaveToJson'])
         dictConsecutiveTime = dict(sorted(dictConsecutiveTime.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(
@@ -234,7 +240,7 @@ async def main():
 
     if args['DailyMessages']:
         dictDailyMessages = {key: sum([j for j in value.values()])/(len([j for j in value.values()])) for key, value in dictDailyMessages.items()}
-        dictDailyMessages = await correct_dict_for_id(dictDailyMessages)
+        dictDailyMessages = await correct_dict_for_id(dictDailyMessages, not args['SaveToJson'])
         dictDailyMessages = dict(sorted(dictDailyMessages.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
@@ -256,6 +262,10 @@ async def main():
     print(f"--- File Reading Time {file_reading_time_end - file_reading_time} seconds ---")
     print(f"--- Making Plots Time {processing_dicts_time_end - processing_dicts_time} seconds ---")
     print(f"--- Fetching ids {sum(ID_LOAD_TIME)} seconds ---")
+
+    if args['SaveToJson']:
+        with open('external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
+            json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
 
     if args['SaveGraphs']:
         plt.savefig('out.png')

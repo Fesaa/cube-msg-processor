@@ -25,6 +25,9 @@ command_line_options.add_option(CommandLineOption('StartDate', regex=RegexOption
                                 info=f'{Fore.CYAN}StartDate{Style.RESET_ALL}: Force a date to start registering data from. A data later than the last recorded day will just return no information.'))                                
 command_line_options.add_option(CommandLineOption('MinMsg', regex=r'\b(\d{1,3})\b', default_argument=10, return_type=int,
                                 info=f'{Fore.CYAN}MinMsg{Style.RESET_ALL}: Minimal messages send in the channel to appear on TotalMessages graph.'))
-command_line_options.add_option(CommandLineOption('MinTime', regex=r'\b(\d{1,2}\.{0,1}\d{0,2})\b', default_argument=0.5, return_type=float, info=f'{Fore.CYAN}MinTime{Style.RESET_ALL}: Minium time spend in the channel to be displayed on the graph.'))
+command_line_options.add_option(CommandLineOption('MinTime', regex=r'\b(\d{1,2}\.{0,1}\d{0,2})\b', default_argument=0.5, return_type=float,
+                                info=f'{Fore.CYAN}MinTime{Style.RESET_ALL}: Minium time spend in the channel to be displayed on the graph.'))
+command_line_options.add_option(CommandLineOption('SaveToJson', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
+                                info=f'{Fore.CYAN}SaveToJson{Style.RESET_ALL}: Save ID_CACHE to external_id_cache.json for future reference. When True, no usernames will be loaded from the json.'))
 
 options = command_line_options.on_start()
