@@ -102,11 +102,16 @@ async def main():
                     start_date = str(start_time.date())
                 else:
                     start_date = args['StartDate']
+                
+                if args['EndDate'] == 'End Date':
+                    end_date = '9999-12-31'
+                else:
+                    end_date = args['EndDate']
 
             for row in [first_row] + list(reader):
                 last_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
 
-                if start_date <= str(last_time.date()):
+                if start_date <= str(last_time.date()) <= end_date:
 
                     if args['TotalMessages']:
                         if row[1] == 'non staff replied':
@@ -175,7 +180,7 @@ async def main():
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "SaveToJson"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "SaveToJson", "EndDate"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
