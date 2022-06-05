@@ -119,6 +119,9 @@ async def main():
     if args['RoleDistribution']:
         dictRoleDistribution = {i: 0 for i in ROLES.keys()}
         RolesMsg = 0
+    
+    if args['HourlyActivity']:
+        dictHourlyActivity = {i: 0 for i in range(24)}
 
     file_reading_time = time.time()
 
@@ -130,6 +133,7 @@ async def main():
             first_row = next(reader)
             start_time = datetime.strptime(first_row[0], '%Y-%m-%d %H:%M:%S.%f')
             last_time = 0
+            total_msgs = 0
 
             if index == 0:
                 if args['ConsecutiveTime']:
@@ -151,6 +155,7 @@ async def main():
 
             for row in [first_row] + list(reader):
                 last_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
+                total_msgs += 1
 
                 if start_date <= str(last_time.date()) <= end_date:
 
@@ -230,7 +235,7 @@ async def main():
                                 dictRoleDistribution['Java Only'] += 1
                             elif JAVA_ROLE not in user_roles and BEDROCK_ROLE in user_roles:
                                 dictRoleDistribution['Bedrock Only'] += 1
-                            else:
+                            elif JAVA_ROLE in user_roles and BEDROCK_ROLE in user_roles:
                                 dictRoleDistribution['Dual'] += 1
 
                             if to_add == []:
@@ -240,12 +245,15 @@ async def main():
                                     dictRoleDistribution[i] += 1
                             
                             RolesMsg += 1
+                    
+                    if args['HourlyActivity']:
+                        dictHourlyActivity[last_time.hour] += 1
 
 
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "SaveToJson", "EndDate"]])
+    amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages"]])
 
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
@@ -253,13 +261,13 @@ async def main():
     print(f'Data from {start_date} until {last_time.date()}')
 
     if args['TotalMessages']:
-        dictReply = {key: value for key, value in dictReply.items()}
-        dictReply = await correct_dict_for_id(dictReply, not args['SaveToJson'])
+        dictReply = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictReply.items()}
+        dictReply = await correct_dict_for_id(dictReply, not args['UpdateJson'])
         dictReply = dict(sorted(dictReply.items(), key=lambda item: item[1], reverse=True))
 
-        print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictReply.items())]))
+        print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" if not args['Percentages'] else f"{key}: {round(value, 3)}%" for key, value in dictReply.items())]))
 
-        l0 = list(reversed([i for i in dictReply.keys() if i not in ['Q', 'S'] and dictReply[i] > args['MinMsg']]))
+        l0 = list(reversed([i for i in dictReply.keys() if i not in ['Q', 'S'] and (dictReply[i] > args['MinMsg'] if not args['Percentages'] else dictReply[i] > 1)]))
         l1 = [dictReply[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
@@ -268,8 +276,8 @@ async def main():
         plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
     if args['Daily']:
-
-        print(f'{Fore.MAGENTA}Daily{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" for key, value in dictDayMessages.items())]))
+        dictDayMessages = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictDayMessages.items()}
+        print(f'{Fore.MAGENTA}Daily{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" if not args['Percentages'] else f"{key}: {round(value, 3)}%" for key, value in dictDayMessages.items())]))
 
         l0 = [str(i) for i in dictDayMessages.keys()]
         l1 = dictDayMessages.values()
@@ -281,7 +289,7 @@ async def main():
 
     if args['ConsecutiveTime']:
         dictConsecutiveTime = {key: sum([i.total_seconds()/(3600) for i in value]) for key, value in dictConsecutiveTime.items()}
-        dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime, not args['SaveToJson'])
+        dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime, not args['UpdateJson'])
         dictConsecutiveTime = dict(sorted(dictConsecutiveTime.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(
@@ -310,7 +318,7 @@ async def main():
 
     if args['DailyMessages']:
         dictDailyMessages = {key: sum([j for j in value.values()])/(len([j for j in value.values()])) for key, value in dictDailyMessages.items()}
-        dictDailyMessages = await correct_dict_for_id(dictDailyMessages, not args['SaveToJson'])
+        dictDailyMessages = await correct_dict_for_id(dictDailyMessages, not args['UpdateJson'])
         dictDailyMessages = dict(sorted(dictDailyMessages.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
@@ -323,21 +331,31 @@ async def main():
         plt.title(f'Avarage msg per member on a day')
         plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
-    plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
-    plt.suptitle(f'Data from {start_date} until {last_time.date()}')
-
     if args['RoleDistribution']:
         dictRoleDistribution = {key: (dictRoleDistribution[key]/RolesMsg)*100 for key in dictRoleDistribution.keys()}
         dictRoleDistribution = dict(sorted(dictRoleDistribution.items(), key=lambda item: item[1], reverse=True))
         print(f'{Fore.MAGENTA}RoleDistribution{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{ROLES[key]}: {round(value, 2)}%" for key, value in dictRoleDistribution.items())]))
 
-        l0 = list(reversed([i for i in dictRoleDistribution.keys()]))
+        l0 = list(reversed([i for i in dictRoleDistribution.keys() if dictRoleDistribution[i] > 0]))
         l1 = [dictRoleDistribution[i] for i in l0]
         l0 = [ROLES[i] for i in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.barh(l0, l1)
         plt.title(f'Role Distribution in percentage over {RolesMsg} messages')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+    
+    if args['HourlyActivity']:
+        dictHourlyActivity = {key: (dictHourlyActivity[key]/total_msgs)*100 for key in dictHourlyActivity.keys()}
+
+        print(f'{Fore.MAGENTA}HourlyActivity{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value,2)}%" for key, value in dictHourlyActivity.items())]))
+
+        l0 = [i for i in dictHourlyActivity.keys()]
+        l1 = [i for i in dictHourlyActivity.values()]
+        plt.subplot(*graph_placements[current_index])
+        current_index += 1
+        plt.barh(l0, l1)
+        plt.title(f'Hourly Activity in percentage')
         plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
 
 
@@ -348,14 +366,17 @@ async def main():
     print(f"--- Making Plots Time {processing_dicts_time_end - processing_dicts_time} seconds ---")
     print(f"--- Fetching ids {sum(ID_LOAD_TIME)} seconds ---")
 
-    if args['SaveToJson']:
-        with open('external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
-            json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
+    with open('external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
+        json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
 
     if args['SaveGraphs']:
         plt.savefig('out.png')
 
     if args['ShowGraphs']:
+
+        plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
+        plt.suptitle(f'Data from {start_date} until {last_time.date()}. Times are CET\nTotal messages: {total_msgs}')
+
         warnings.filterwarnings("ignore")
         plt.show()
 
