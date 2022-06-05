@@ -15,6 +15,8 @@ command_line_options.add_option(CommandLineOption('ReplyTimes', regex=RegexOptio
                                 info=f'{Fore.CYAN}ReplyTimes{Style.RESET_ALL}: Adds a graphs to your figure with the average waiting time per time slots of one hour.'))
 command_line_options.add_option(CommandLineOption('DailyMessages', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}DailyMessages{Style.RESET_ALL}: Adds a graphs to your figure with the average amount of messages per day in the recorded period.'))
+command_line_options.add_option(CommandLineOption('RoleDistribution', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
+                                info=f'{Fore.CYAN}RoleDistribution{Style.RESET_ALL}: Adds a graph to your figure with the msg per role. Will be the displayed in percentage.'))
 command_line_options.add_option(CommandLineOption('IgnoreMessages', regex=r'\b([0-9]|1[0-9])\b', default_argument=2, return_type=int,
                                 info=f'{Fore.CYAN}IgnoreMessages{Style.RESET_ALL}: amount of non staff messages have to be send before we start counting wait time. This to take thank you messages into account. {Fore.RED}[Staff Help Specific]{Style.RESET_ALL}'))
 command_line_options.add_option(CommandLineOption('StartDate', regex=RegexOptions.DATE, default_argument='First Date', return_type=str,

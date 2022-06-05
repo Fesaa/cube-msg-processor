@@ -1,3 +1,4 @@
+import ast
 import csv
 import time
 import json
@@ -16,6 +17,42 @@ TOKEN = config.get('TOKEN')
 ID_CACHE = {}
 EXTERNAL_ID_CACHE = json.load(open('external_id_cache.json', encoding='ISO 8859-1'))
 ID_LOAD_TIME = []
+
+STAFF_ROLES = [174838443111612417, 709042556335292437, 174838794665590784, 174887088288694273,
+               705434655737905223, 174846441678700544, 174851151953526785, 671456437456863272]
+JAVA_ROLE = 778709973373812737
+BEDROCK_ROLE = 778709999081619486
+ROLES = {
+    174838443111612417: "Admin Team",
+    709042556335292437: "Sr Mod",
+    174838794665590784: "Mod",
+    174887088288694273: "Helper",
+    705434655737905223: "QA",
+    174846441678700544: "Dev",
+    671456437456863272: "Sr Designer",
+    174851151953526785: "Designer",
+    753617177730613378: "Content Creator",
+    585529350435242014: "Nitro Booster",
+    768818655269617685: "Obsidian",
+    774251888115187723: "VIP 5",
+    768818453883650048: "Emerald",
+    774251889948622848: "VIP 4",
+    768818452214448128: "Diamond",
+    774251892582645770: "VIP 3",
+    768818451002687568: "Gold",
+    774251894779805716: "VIP 2",
+    768818449291804693: "Lapiz",
+    774251896486756372: "VIP 1",
+    768818435228172299: "Iron",
+    768818137532465162: "Plus",
+    778709973373812737: "Java",
+    778709999081619486: "Bedrock",
+    778709940540932106: "Forums",
+    "No Roles": "No Roles",
+    "Java Only": "Java Only",
+    "Bedrock Only": "Bedrock Only",
+    "Dual": "Dual"
+}
 
 
 async def get_name_from_id(user_id: int, external: bool) -> str:
@@ -78,6 +115,10 @@ async def main():
 
     if args['DailyMessages']:
         dictDailyMessages = {}
+    
+    if args['RoleDistribution']:
+        dictRoleDistribution = {i: 0 for i in ROLES.keys()}
+        RolesMsg = 0
 
     file_reading_time = time.time()
 
@@ -176,6 +217,30 @@ async def main():
                                     dictDailyMessages[row[1]][last_time.day] = 1
                             else:
                                 dictDailyMessages[row[1]] = {last_time.day: 1}
+                    
+                    if args['RoleDistribution']:
+                        if len(row) == 3:
+                            user_roles = ast.literal_eval(row[2])
+                            if len((set(user_roles) & set(STAFF_ROLES))) > 1:
+                                to_add = [int(i) for i in user_roles if int(i) in STAFF_ROLES]
+                            else:
+                                to_add = [int(i) for i in user_roles if int(i) in ROLES]
+
+                            if JAVA_ROLE in user_roles and BEDROCK_ROLE not in user_roles:
+                                dictRoleDistribution['Java Only'] += 1
+                            elif JAVA_ROLE not in user_roles and BEDROCK_ROLE in user_roles:
+                                dictRoleDistribution['Bedrock Only'] += 1
+                            else:
+                                dictRoleDistribution['Dual'] += 1
+
+                            if to_add == []:
+                                dictRoleDistribution['No Roles'] += 1
+                            else:
+                                for i in to_add:
+                                    dictRoleDistribution[i] += 1
+                            
+                            RolesMsg += 1
+
 
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
@@ -260,6 +325,21 @@ async def main():
 
     plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
     plt.suptitle(f'Data from {start_date} until {last_time.date()}')
+
+    if args['RoleDistribution']:
+        dictRoleDistribution = {key: (dictRoleDistribution[key]/RolesMsg)*100 for key in dictRoleDistribution.keys()}
+        dictRoleDistribution = dict(sorted(dictRoleDistribution.items(), key=lambda item: item[1], reverse=True))
+        print(f'{Fore.MAGENTA}RoleDistribution{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{ROLES[key]}: {round(value, 2)}%" for key, value in dictRoleDistribution.items())]))
+
+        l0 = list(reversed([i for i in dictRoleDistribution.keys()]))
+        l1 = [dictRoleDistribution[i] for i in l0]
+        l0 = [ROLES[i] for i in l0]
+        plt.subplot(*graph_placements[current_index])
+        current_index += 1
+        plt.barh(l0, l1)
+        plt.title(f'Role Distribution in percentage over {RolesMsg} messages')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+
 
     processing_dicts_time_end = time.time()
 
