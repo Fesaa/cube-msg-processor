@@ -27,8 +27,8 @@ command_line_options.add_option(CommandLineOption('StartDate', regex=RegexOption
                                 info=f'{Fore.CYAN}StartDate{Style.RESET_ALL}: Force a date to start registering data from. A date later than the last recorded day will just return no information.'))                                
 command_line_options.add_option(CommandLineOption('EndDate', regex=RegexOptions.DATE, default_argument='End Date', return_type=str,
                                 info=f'{Fore.CYAN}EndDate{Style.RESET_ALL}: Force a date to end registering data from. A date earlier than the first recorded day will just return no information.'))
-command_line_options.add_option(CommandLineOption('User', regex=RegexOptions.INT, default_argument=True, return_type=str,
-                                info=f'{Fore.CYAN}EndDate{Style.RESET_ALL}: Only record info on a singular person. Will choose the graphs for you.'))
+command_line_options.add_option(CommandLineOption('User', regex=r'\b(\d{18}|Q)\b', default_argument=True, return_type=str,
+                                info=f'{Fore.CYAN}User{Style.RESET_ALL}: Only record info on a singular person. Will choose the graphs for you.'))
 command_line_options.add_option(CommandLineOption('MinMsg', regex=r'\b(\d{1,3})\b', default_argument=10, return_type=int,
                                 info=f'{Fore.CYAN}MinMsg{Style.RESET_ALL}: Minimal messages send in the channel to appear on TotalMessages graph.'))
 command_line_options.add_option(CommandLineOption('MinTime', regex=r'\b(\d{1,2}\.{0,1}\d{0,2})\b', default_argument=0.5, return_type=float,

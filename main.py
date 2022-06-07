@@ -86,8 +86,7 @@ async def get_name_from_id(user_id: int, external: bool) -> str:
                 return username
 
             else:
-                print(res)
-                await asyncio.sleep(1)
+                return user_id
 
 
 async def correct_dict_for_id(d: dict, external: bool) -> dict:
@@ -111,7 +110,7 @@ async def main():
         dictConsecutiveTime = {}
 
     if args['ReplyTimes']:
-        dictReplyTimes = {i: [delta] for i in range(24)}
+        dictReplyTimes = {i: [] for i in range(24)}
 
     if args['DailyMessages']:
         dictDailyMessages = {}
@@ -122,6 +121,11 @@ async def main():
     
     if args['HourlyActivity'] or args['User'] is not True:
         dictHourlyActivity = {i: 0 for i in range(24)}
+    
+    if args['User'] == 'Q':
+        args['User'] = 'non staff replied'
+    elif args['User'] == 'S':
+        args["User"] == True
 
     file_reading_time = time.time()
 
@@ -132,15 +136,16 @@ async def main():
 
             first_row = next(reader)
             start_time = datetime.strptime(first_row[0], '%Y-%m-%d %H:%M:%S.%f')
-            last_time = 0
-            total_msgs = 0
+            current_time = 0
 
             if index == 0:
+                total_msgs = 0
+
                 if args['ConsecutiveTime']:
                     active_members = {}
 
                 if args['ReplyTimes']:
-                    last_reply_time = start_time
+                    messages_times = []
                     non_staff_replies = 0
 
                 if args['StartDate'] == 'First Date':
@@ -154,13 +159,13 @@ async def main():
                     end_date = args['EndDate']
 
             for row in [first_row] + list(reader):
-                last_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
+                current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
                 
 
-                if start_date <= str(last_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True):
+                if start_date <= str(current_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True):
                     total_msgs += 1
 
-                    if args['TotalMessages'] or args['User'] is not True:
+                    if args['TotalMessages']:
                         if row[1] == 'non staff replied':
                             dictReply['Q'] += 1
                         else:
@@ -171,7 +176,7 @@ async def main():
                                 dictReply[row[1]] = 1
 
                     if args['Daily'] or args['User'] is not True:
-                        if row[1] != 'non staff replied':
+                        if row[1] != 'non staff replied' or args['User'] == 'non staff replied':
                             day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
                             if day in dictDayMessages.keys():
                                 dictDayMessages[day] += 1
@@ -183,13 +188,13 @@ async def main():
 
                         if row[1] != 'non staff replied':
                             if row[1] not in active_members:
-                                active_members[row[1]] = {'start_time': last_time, 'last_time': last_time}
+                                active_members[row[1]] = {'start_time': current_time, 'last_time': current_time}
                                 
                             
-                            active_members[row[1]]['last_time'] = last_time
+                            active_members[row[1]]['last_time'] = current_time
 
                         for user_id, info in active_members.items():
-                            time_difference: timedelta = last_time - info['last_time']
+                            time_difference: timedelta = current_time - info['last_time']
 
                             if time_difference.total_seconds()/60 > 10:
                                 
@@ -207,22 +212,25 @@ async def main():
 
                         if row[1] == "non staff replied":
                             non_staff_replies += 1
-                            if non_staff_replies == args['IgnoreMessages']:
-                                last_reply_time = last_time
+                            if non_staff_replies >= args['IgnoreMessages']:
+                                messages_times.append(current_time)
                         else:
                             if non_staff_replies > args['IgnoreMessages']:
-                                dictReplyTimes[last_time.hour].append(last_time - last_reply_time)
-                            non_staff_replies, last_reply_time = 0, last_time
+                                for times in messages_times:
+                                    dictReplyTimes[times.hour].append(current_time - times)
+
+                                messages_times = []
+                            non_staff_replies = 0
 
                     if args['DailyMessages']:
                         if row[1] != "non staff replied":
                             if row[1] in dictDailyMessages:
-                                if last_time.day in dictDailyMessages[row[1]]:
-                                    dictDailyMessages[row[1]][last_time.day] += 1
+                                if current_time.day in dictDailyMessages[row[1]]:
+                                    dictDailyMessages[row[1]][current_time.day] += 1
                                 else:
-                                    dictDailyMessages[row[1]][last_time.day] = 1
+                                    dictDailyMessages[row[1]][current_time.day] = 1
                             else:
-                                dictDailyMessages[row[1]] = {last_time.day: 1}
+                                dictDailyMessages[row[1]] = {current_time.day: 1}
                     
                     if args['RoleDistribution']:
                         if len(row) == 3:
@@ -248,7 +256,7 @@ async def main():
                             RolesMsg += 1
                     
                     if args['HourlyActivity'] or args['User'] is not True:
-                        dictHourlyActivity[last_time.hour] += 1
+                        dictHourlyActivity[current_time.hour] += 1
 
 
     file_reading_time_end = time.time()
@@ -257,13 +265,13 @@ async def main():
     if args['User'] is True:
         amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User"]])
     else:
-        amount_of_graphs = 3
+        amount_of_graphs = 2
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
 
-    print(f'Data from {start_date} until {last_time.date()}')
+    print(f'Data from {start_date} until {current_time.date()}')
 
-    if args['TotalMessages'] or args['User'] is not True:
+    if args['TotalMessages'] and args['User'] is True:
         dictReply = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictReply.items()}
         dictReply = await correct_dict_for_id(dictReply, not args['UpdateJson'])
         dictReply = dict(sorted(dictReply.items(), key=lambda item: item[1], reverse=True))
@@ -309,10 +317,10 @@ async def main():
     if args['ReplyTimes'] and args['User'] is True:
 
         print(f'{Fore.MAGENTA}ReplyTimes{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(
-            f"{key}: {round(sum([i.total_seconds()/(60) for i in value])/len(value), 2)}" for key, value in dictReplyTimes.items())]))
+            f"{key}: {round(sum([i.total_seconds()/(60) for i in value])/len(value), 2)}" if len(value) > 0 else f'{key}: 0' for key, value in dictReplyTimes.items())]))
 
         l0 = [str(i) for i in dictReplyTimes.keys()]
-        l1 = [sum([j.total_seconds()/60 for j in i])/len(i) for i in dictReplyTimes.values()]
+        l1 = [0 if len(i) == 0 else sum([j.total_seconds()/60 for j in i])/len(i)  for i in dictReplyTimes.values()]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.barh(l0, l1)
@@ -373,12 +381,13 @@ async def main():
         json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
 
     if args['SaveGraphs']:
+        warnings.filterwarnings("ignore")
         plt.savefig('out.png')
 
     if args['ShowGraphs']:
 
         plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
-        plt.suptitle(f'Data from {start_date} until {last_time.date()}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}')
+        plt.suptitle(f'Data from {start_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}')
 
         warnings.filterwarnings("ignore")
         plt.show()
