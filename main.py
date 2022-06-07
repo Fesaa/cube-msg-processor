@@ -135,23 +135,24 @@ async def main():
             reader = csv.reader(f)
 
             first_row = next(reader)
-            start_time = datetime.strptime(first_row[0], '%Y-%m-%d %H:%M:%S.%f')
             current_time = 0
+
+            if args['ConsecutiveTime']:
+                    active_members = {}
 
             if index == 0:
                 total_msgs = 0
-
-                if args['ConsecutiveTime']:
-                    active_members = {}
 
                 if args['ReplyTimes']:
                     messages_times = []
                     non_staff_replies = 0
 
                 if args['StartDate'] == 'First Date':
-                    start_date = str(start_time.date())
+                    start_date = '0000-00-00'
+                    earliest_date = '9999-12-31'
                 else:
                     start_date = args['StartDate']
+                    earliest_date = start_date
                 
                 if args['EndDate'] == 'End Date':
                     end_date = '9999-12-31'
@@ -160,8 +161,10 @@ async def main():
 
             for row in [first_row] + list(reader):
                 current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
-                
 
+                if str(current_time.date()) < earliest_date:
+                    earliest_date = str(current_time.date())
+                
                 if start_date <= str(current_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True):
                     total_msgs += 1
 
@@ -288,9 +291,10 @@ async def main():
 
     if args['Daily'] or args['User'] is not True:
         dictDayMessages = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictDayMessages.items()}
+        dictDayMessages = {key: dictDayMessages[key] for key in sorted(dictDayMessages.keys(), reverse=True)}
         print(f'{Fore.MAGENTA}Daily{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" if not args['Percentages'] else f"{key}: {round(value, 3)}%" for key, value in dictDayMessages.items())]))
 
-        l0 = [str(i) for i in dictDayMessages.keys()]
+        l0 = list(reversed([str(i) for i in dictDayMessages.keys()]))
         l1 = dictDayMessages.values()
         plt.subplot(*graph_placements[current_index])
         current_index += 1
@@ -387,7 +391,7 @@ async def main():
     if args['ShowGraphs']:
 
         plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
-        plt.suptitle(f'Data from {start_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}')
+        plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}')
 
         warnings.filterwarnings("ignore")
         plt.show()
