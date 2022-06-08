@@ -18,6 +18,16 @@ ID_CACHE = {}
 EXTERNAL_ID_CACHE = json.load(open('external_id_cache.json', encoding='ISO 8859-1'))
 ID_LOAD_TIME = []
 
+def font_size(length: int) -> str:
+    if length in range(0,10):
+        return 'smaller'
+    elif length in range(10,20):
+        return 'small'
+    elif length in range(20,30):
+        return 'x-small'
+    else:
+        return 'xx-small'
+
 STAFF_ROLES = [174838443111612417, 709042556335292437, 174838794665590784, 174887088288694273,
                705434655737905223, 174846441678700544, 174851151953526785, 671456437456863272]
 JAVA_ROLE = 778709973373812737
@@ -162,7 +172,7 @@ async def main():
             for row in [first_row] + list(reader):
                 current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
 
-                if str(current_time.date()) < earliest_date:
+                if str(current_time.date()) < earliest_date and args['StartDate'] == 'First Date':
                     earliest_date = str(current_time.date())
                 
                 if start_date <= str(current_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True):
@@ -200,11 +210,14 @@ async def main():
                             time_difference: timedelta = current_time - info['last_time']
 
                             if time_difference.total_seconds()/60 > 10:
+                                delta_t: timedelta = info['last_time'] - info['start_time']
+                                if delta_t.total_seconds() == 0:
+                                    delta_t = timedelta(minutes=5)
                                 
                                 if user_id in dictConsecutiveTime:
-                                    dictConsecutiveTime[user_id].append(info['last_time'] - info['start_time'])
+                                    dictConsecutiveTime[user_id].append(delta_t)
                                 else:
-                                    dictConsecutiveTime[user_id] = [info['last_time'] - info['start_time']]
+                                    dictConsecutiveTime[user_id] = [delta_t]
 
                                 to_remove.append(user_id)
                             
@@ -272,7 +285,7 @@ async def main():
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
 
-    print(f'Data from {start_date} until {current_time.date()}')
+    print(f'Data from {earliest_date} until {current_time.date()}')
 
     if args['TotalMessages'] and args['User'] is True:
         dictReply = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictReply.items()}
@@ -287,7 +300,7 @@ async def main():
         current_index += 1
         plt.barh(l0, l1)
         plt.title(f'Amount of msg {"per member" if args["User"] is True else ""}')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if args['Daily'] or args['User'] is not True:
         dictDayMessages = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictDayMessages.items()}
@@ -300,7 +313,7 @@ async def main():
         current_index += 1
         plt.barh(l0, l1)
         plt.title('Amount msg by per day')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if args['ConsecutiveTime'] and args['User'] is True:
         dictConsecutiveTime = {key: sum([i.total_seconds()/(3600) for i in value]) for key, value in dictConsecutiveTime.items()}
@@ -316,7 +329,7 @@ async def main():
         current_index += 1
         plt.barh(l0, l1)
         plt.title('Total time spend in hours')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if args['ReplyTimes'] and args['User'] is True:
 
@@ -329,7 +342,7 @@ async def main():
         current_index += 1
         plt.barh(l0, l1)
         plt.title(f'Avarage wait time on a question for a given hour. Ignores {args["IgnoreMessages"]} messages')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if args['DailyMessages']:
         dictDailyMessages = {key: sum([j for j in value.values()])/(len([j for j in value.values()])) for key, value in dictDailyMessages.items()}
@@ -344,7 +357,7 @@ async def main():
         current_index += 1
         plt.barh(l0, l1)
         plt.title(f'Avarage msg per member on a day')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if args['RoleDistribution'] and args['User'] is True:
         dictRoleDistribution = {key: (dictRoleDistribution[key]/RolesMsg)*100 for key in dictRoleDistribution.keys()}
@@ -358,7 +371,7 @@ async def main():
         current_index += 1
         plt.barh(l0, l1)
         plt.title(f'Role Distribution in percentage over {RolesMsg} messages')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
     
     if args['HourlyActivity'] or args['User'] is not True:
         dictHourlyActivity = {key: (dictHourlyActivity[key]/total_msgs)*100 for key in dictHourlyActivity.keys()}
@@ -371,14 +384,14 @@ async def main():
         current_index += 1
         plt.barh(l0, l1)
         plt.title(f'Hourly Activity in percentage')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize='x-small')
+        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
 
     processing_dicts_time_end = time.time()
 
     print(f"--- Total Run Time {time.time() - total_run_time} seconds ---")
     print(f"--- File Reading Time {file_reading_time_end - file_reading_time} seconds ---")
-    print(f"--- Making Plots Time {processing_dicts_time_end - processing_dicts_time} seconds ---")
+    print(f"--- Making Plots Time {processing_dicts_time_end - processing_dicts_time -sum(ID_LOAD_TIME)} seconds ---")
     print(f"--- Fetching ids {sum(ID_LOAD_TIME)} seconds ---")
 
     with open('external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
