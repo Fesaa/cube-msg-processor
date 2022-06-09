@@ -5,7 +5,7 @@ from colorama import Fore, Style
 command_line_options = CommandLineOptions()
 command_line_options.add_option(CommandLineOption('FileName', regex=RegexOptions.SIMPLE_STR, return_type=List[str],
                                 info=f'{Fore.CYAN}FileName{Style.RESET_ALL}: Filenames to process'))
-command_line_options.add_option(CommandLineOption('Daily', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
+command_line_options.add_option(CommandLineOption('Daily', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day.\nMinimum of {Fore.MAGENTA}10{Style.RESET_ALL} messages are needed to be displayed on the graph.'))
 command_line_options.add_option(CommandLineOption('ConsecutiveTime', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
                                 info=f'{Fore.CYAN}ConsecutiveTime{Style.RESET_ALL}: Adds a graph to your figure with the total time spend in the channel. \nMinimum of {Fore.MAGENTA}30min {Style.RESET_ALL}is needed to be displayed on the graph.'))
@@ -17,7 +17,7 @@ command_line_options.add_option(CommandLineOption('DailyMessages', regex=RegexOp
                                 info=f'{Fore.CYAN}DailyMessages{Style.RESET_ALL}: Adds a graphs to your figure with the average amount of messages per day in the recorded period.'))
 command_line_options.add_option(CommandLineOption('RoleDistribution', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
                                 info=f'{Fore.CYAN}RoleDistribution{Style.RESET_ALL}: Adds a graph to your figure with the msg per role. Will be the displayed in percentage.'))
-command_line_options.add_option(CommandLineOption('HourlyActivity', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
+command_line_options.add_option(CommandLineOption('HourlyActivity', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
                                 info=f'{Fore.CYAN}HourlyActivity{Style.RESET_ALL}: Adds a graph to your figure with the percentage of msg send per hour.'))
 command_line_options.add_option(CommandLineOption('IgnoreMessages', regex=r'\b([0-9]|1[0-9])\b', default_argument=2, return_type=int,
                                 info=f'{Fore.CYAN}IgnoreMessages{Style.RESET_ALL}: amount of non staff messages have to be send before we start counting wait time. This to take thank you messages into account. {Fore.RED}[Staff Help Specific]{Style.RESET_ALL}'))
@@ -39,5 +39,9 @@ command_line_options.add_option(CommandLineOption('SaveGraphs', regex=RegexOptio
                                 info=f"{Fore.CYAN}SaveGraphs{Style.RESET_ALL}: Save your figure to a .png in your cwd."))
 command_line_options.add_option(CommandLineOption('ShowGraphs', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
                                 info=f'{Fore.CYAN}ShowGraphs{Style.RESET_ALL}: Shows your graph after making it.'))
+command_line_options.add_option(CommandLineOption('Output', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
+                                info=f'{Fore.CYAN}Output{Style.RESET_ALL}: Output all dict to a .json file.'))
+command_line_options.add_option(CommandLineOption('Accurate', regex=RegexOptions.BOOL, default_argument=False,
+                                info=f'{Fore.CYAN}Accurate{Style.RESET_ALL}: More accurate division of times.'))
 
 options = command_line_options.on_start()
