@@ -217,7 +217,7 @@ async def main():
         summary += "Top 3 Users with most messages\n\t" + \
                 "".join(f"{key}: {dictTotalMessages[key]}".ljust(25) if not args['Percentages'] else f"{key}: {round(dictTotalMessages[key], 3)}%".ljust(25) for key in list([i for i in dictTotalMessages.keys() if i not in ['Q', 'S']])[:3]) + "\n\n"
 
-        l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > args['MinMsg'] if not args['Percentages'] and args['User'] is True else dictTotalMessages[i] > 0.1)]))
+        l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > args['MinMsg'] if not args['Percentages'] and args['User'] is True else dictTotalMessages[i] > 1)]))
         l1 = [dictTotalMessages[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
@@ -365,7 +365,8 @@ async def main():
     if args['ShowGraphs']:
 
         plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
-        plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}')
+        plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}',
+        color = 'midnightblue')
 
         warnings.filterwarnings("ignore")
         plt.show()
