@@ -1,112 +1,18 @@
 import ast
 import csv
-from math import floor
 import time
 import json
 import asyncio
 import warnings
-import requests
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
+
+from math import floor
 from colorama import Fore, Style
+from datetime import datetime, timedelta
 
 from init import options
-
-config = json.load(open('config.json', encoding='utf-8'))
-TOKEN = config.get('TOKEN')
-
-ID_CACHE = {}
-EXTERNAL_ID_CACHE = json.load(open('external_id_cache.json', encoding='ISO 8859-1'))
-ID_LOAD_TIME = []
-
-def font_size(length: int) -> str:
-    if length in range(0,10):
-        return 'smaller'
-    elif length in range(10,20):
-        return 'small'
-    elif length in range(20,30):
-        return 'x-small'
-    else:
-        return 'xx-small'
-
-def inv_dict(d: dict) -> dict:
-    return {value: key for key, value in d.items()}
-
-STAFF_ROLES = [174838443111612417, 709042556335292437, 174838794665590784, 174887088288694273,
-               705434655737905223, 174846441678700544, 174851151953526785, 671456437456863272]
-JAVA_ROLE = 778709973373812737
-BEDROCK_ROLE = 778709999081619486
-ROLES = {
-    174838443111612417: "Admin Team",
-    709042556335292437: "Sr Mod",
-    174838794665590784: "Mod",
-    174887088288694273: "Helper",
-    705434655737905223: "QA",
-    174846441678700544: "Dev",
-    671456437456863272: "Sr Designer",
-    174851151953526785: "Designer",
-    753617177730613378: "Content Creator",
-    585529350435242014: "Nitro Booster",
-    768818655269617685: "Obsidian",
-    774251888115187723: "VIP 5",
-    768818453883650048: "Emerald",
-    774251889948622848: "VIP 4",
-    768818452214448128: "Diamond",
-    774251892582645770: "VIP 3",
-    768818451002687568: "Gold",
-    774251894779805716: "VIP 2",
-    768818449291804693: "Lapiz",
-    774251896486756372: "VIP 1",
-    768818435228172299: "Iron",
-    768818137532465162: "Plus",
-    778709973373812737: "Java",
-    778709999081619486: "Bedrock",
-    778709940540932106: "Forums",
-    "No Roles": "No Roles",
-    "Java Only": "Java Only",
-    "Bedrock Only": "Bedrock Only",
-    "Dual": "Dual"
-}
-
-
-async def get_name_from_id(user_id: int, external: bool) -> str:
-    start = time.time()
-
-    if external:
-        if str(user_id) in EXTERNAL_ID_CACHE:
-            ID_LOAD_TIME.append(time.time() - start)
-            return EXTERNAL_ID_CACHE[str(user_id)]
-    
-    if user_id in ID_CACHE:
-        return ID_CACHE[user_id]
-    else:
-        while True:
-            res = requests.get(f"https://discord.com/api/v9/users/{user_id}", headers={"Authorization": TOKEN})
-
-            if str(res) == "<Response [429]>":
-                time_out = res.json()['retry_after']
-                print(f'Rate limited while fetching discord username, trying again in {time_out} ...')
-                await asyncio.sleep(time_out)
-
-            elif str(res) == "<Response [200]>":
-                username = res.json()['username']
-
-                if len(username) > 15:
-                    username = username[:15] + '...'
-
-                ID_CACHE[user_id] = username
-                ID_LOAD_TIME.append(time.time() - start)
-
-                return username
-
-            else:
-                return user_id
-
-
-async def correct_dict_for_id(d: dict, external: bool) -> dict:
-    return {await get_name_from_id(int(key), external) if key.isdigit() else key: value for key, value in d.items()}
-
-delta = timedelta(microseconds=1)
+from functions import *
+from constants import *
 
 async def main():
     total_run_time = time.time()
@@ -280,8 +186,9 @@ async def main():
                             RolesMsg += 1
                     
                     if args['HourlyActivity'] or args['User'] is not True:
-                        dictHourlyActivity[current_time.hour] += 1
-                        dictAccurateHourlyActivity[(current_time.hour, floor(current_time.minute/10) * 10)] += 1
+                        if row[1] != 'non staff replied':
+                            dictHourlyActivity[current_time.hour] += 1
+                            dictAccurateHourlyActivity[(current_time.hour, floor(current_time.minute/10) * 10)] += 1
 
 
     file_reading_time_end = time.time()
@@ -298,6 +205,9 @@ async def main():
 
     summary = f"{Fore.GREEN}Global Summary: {Style.RESET_ALL}\n\n"
 
+    plt.style.use('ggplot')
+    plt.figure(facecolor='silver')
+
     if args['TotalMessages'] and args['User'] is True:
         dictTotalMessages = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictTotalMessages.items()}
         dictTotalMessages = await correct_dict_for_id(dictTotalMessages, not args['UpdateJson'])
@@ -307,12 +217,12 @@ async def main():
         summary += "Top 3 Users with most messages\n\t" + \
                 "".join(f"{key}: {dictTotalMessages[key]}".ljust(25) if not args['Percentages'] else f"{key}: {round(dictTotalMessages[key], 3)}%".ljust(25) for key in list([i for i in dictTotalMessages.keys() if i not in ['Q', 'S']])[:3]) + "\n\n"
 
-        l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > args['MinMsg'] if not args['Percentages'] and args['User'] is True else dictTotalMessages[i] > 1)]))
+        l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > args['MinMsg'] if not args['Percentages'] and args['User'] is True else dictTotalMessages[i] > 0.1)]))
         l1 = [dictTotalMessages[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.barh(l0, l1)
-        plt.title(f'Amount of msg {"per member" if args["User"] is True else ""}')
+        plt.barh(l0, l1, color = colour_list(l1))
+        plt.title(f'Amount of msg {"per member" if args["User"] is True else ""} {"in percentage of the total" if args["Percentages"] else ""}')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if args['Daily'] or args['User'] is not True:
@@ -327,7 +237,7 @@ async def main():
         l1 = [dictDaily[i] for i in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.barh(l0, l1)
+        plt.barh(l0, l1, color = colour_list(l1))
         plt.title('Amount msg by per day')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
@@ -344,13 +254,13 @@ async def main():
         l1 = [dictConsecutiveTime[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.barh(l0, l1)
+        plt.barh(l0, l1, color = colour_list(l1))
         plt.title('Total time spend in hours')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if args['ReplyTimes'] and args['User'] is True:
         dictReplyTimes = {key: 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictReplyTimes.items()}
-        dictAccurateReplyTimes = {f"{key[0]}:{key[1]}": 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictAccurateReplyTimes.items()}
+        dictAccurateReplyTimes = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictAccurateReplyTimes.items()}
 
         if args['Accurate']:
             used = dictAccurateReplyTimes
@@ -367,9 +277,9 @@ async def main():
 
         if args['Accurate']:
             plt.plot(l0, l1)
-            plt.xticks(l0[0::7], l0[0::7], rotation='vertical', fontsize=font_size(24))
+            plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
-            plt.barh(l0, l1)
+            plt.barh(l0, l1, color = colour_list(l1))
             plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
         plt.title(f'Avarage wait time on a question for a given hour. Ignores {args["IgnoreMessages"]} messages')
@@ -385,7 +295,7 @@ async def main():
         l1 = [dictDailyMessages[i] for i in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.barh(l0, l1)
+        plt.barh(l0, l1, color = colour_list(l1))
         plt.title(f'Avarage msg per member on a day')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
@@ -404,13 +314,13 @@ async def main():
         l0 = [ROLES[i] for i in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
-        plt.barh(l0, l1)
+        plt.barh(l0, l1, color = colour_list(l1))
         plt.title(f'Role Distribution in percentage over {RolesMsg} messages')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
     
     if args['HourlyActivity'] or args['User'] is not True:
         dictHourlyActivity = {key: (dictHourlyActivity[key]/total_msgs)*100 for key in dictHourlyActivity.keys()}
-        dictAccurateHourlyActivity = {f"{key[0]}:{key[1]}": (dictAccurateHourlyActivity[key]/total_msgs)*100 for key in dictAccurateHourlyActivity.keys()}
+        dictAccurateHourlyActivity = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": (dictAccurateHourlyActivity[key]/total_msgs)*100 for key in dictAccurateHourlyActivity.keys()}
 
         if args['Accurate']:
             used = dictAccurateHourlyActivity
@@ -431,13 +341,12 @@ async def main():
             plt.plot(l0, l1)
             plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
-            plt.barh(l0, l1)
+            plt.barh(l0, l1, color = colour_list(l1))
             plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
         
         plt.title(f'Hourly Activity in percentage')
     
     print(summary)
-
 
     processing_dicts_time_end = time.time()
 
@@ -446,7 +355,7 @@ async def main():
     print(f"--- Making Plots Time {processing_dicts_time_end - processing_dicts_time -sum(ID_LOAD_TIME)} seconds ---")
     print(f"--- Fetching ids {sum(ID_LOAD_TIME)} seconds ---")
 
-    with open('external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
+    with open('json/external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
         json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
 
     if args['SaveGraphs']:
@@ -491,7 +400,7 @@ async def main():
             else:
                 out['HourlyActivity'] = dictHourlyActivity
         
-        with open('output.json', 'w', encoding='ISO 8859-1') as f:
+        with open('out/output.json', 'w', encoding='ISO 8859-1') as f:
             json.dump(out, f)
 
 if __name__ == '__main__':
