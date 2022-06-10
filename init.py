@@ -3,8 +3,11 @@ from typing import List
 from colorama import Fore, Style
 
 command_line_options = CommandLineOptions()
-command_line_options.add_option(CommandLineOption('FileName', regex=RegexOptions.SIMPLE_STR, return_type=List[str],
+file_option_one = command_line_options.add_option(CommandLineOption('FileName', regex=r'\b.*\.csv\b', return_type=List[str],
                                 info=f'{Fore.CYAN}FileName{Style.RESET_ALL}: Filenames to process'))
+file_option_two = command_line_options.add_option(CommandLineOption('Path', regex=RegexOptions.SIMPLE_STR, return_type=str,
+                                info=f'{Fore.CYAN}FileName{Style.RESET_ALL}: specify a path to get all files from.'))
+command_line_options.add_dependency(file_option_one, file_option_two)
 command_line_options.add_option(CommandLineOption('Daily', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day.\nMinimum of {Fore.MAGENTA}10{Style.RESET_ALL} messages are needed to be displayed on the graph.'))
 command_line_options.add_option(CommandLineOption('ConsecutiveTime', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
@@ -43,5 +46,7 @@ command_line_options.add_option(CommandLineOption('Output', regex=RegexOptions.B
                                 info=f'{Fore.CYAN}Output{Style.RESET_ALL}: Output all dict to a .json file.'))
 command_line_options.add_option(CommandLineOption('Accurate', regex=RegexOptions.BOOL, default_argument=False,
                                 info=f'{Fore.CYAN}Accurate{Style.RESET_ALL}: More accurate division of times.'))
+command_line_options.add_option(CommandLineOption('StaffHelp', regex=RegexOptions.BOOL, return_type=bool, default_argument=False,
+                                info=f'{Fore.CYAN}StaffHelp{Style.RESET_ALL}: Filters staff and non staff msg. Only use when Only checking staff help.'))
 
 options = command_line_options.on_start()

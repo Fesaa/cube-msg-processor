@@ -5,6 +5,7 @@ import json
 import asyncio
 import warnings
 import matplotlib.pyplot as plt
+from os import listdir
 
 from math import floor
 from colorama import Fore, Style
@@ -17,6 +18,9 @@ from constants import *
 async def main():
     total_run_time = time.time()
     FileNames = options['FileName']
+
+    if not FileNames:
+        FileNames = [options['Path'] + i for i in listdir(options['Path'])]     
 
     args = options
 
@@ -43,11 +47,6 @@ async def main():
     if args['HourlyActivity'] or args['User'] is not True:
         dictHourlyActivity = {i: 0 for i in range(24)}
         dictAccurateHourlyActivity = {(hour, minute): 0 for hour in range(24) for minute in range(0,60,10)}
-    
-    if args['User'] == 'Q':
-        args['User'] = 'non staff replied'
-    elif args['User'] == 'S':
-        args["User"] == True
 
     file_reading_time = time.time()
 
@@ -83,6 +82,10 @@ async def main():
 
             for row in [first_row] + list(reader):
                 current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
+                if len(row) == 3:
+                    roles = ast.literal_eval(row[2])
+                else:
+                    roles = []
 
                 if str(current_time.date()) < earliest_date and args['StartDate'] == 'First Date':
                     earliest_date = str(current_time.date())
@@ -90,32 +93,47 @@ async def main():
                 if start_date <= str(current_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True):
                     total_msgs += 1
 
-                    if args['TotalMessages']:
-                        if row[1] == 'non staff replied':
+                    do = False
+                    if args['StaffHelp']:
+                        if len(row) == 3:
+                            if check_staff(roles):
+                                do = True
+                            elif args['User'] == 'Q':
+                                do = True
+                        else:
+                            if row[1] != 'non staff replied':
+                                do = True
+                            elif args['User'] == 'Q':
+                                do = True
+                    elif row[1] != 'non staff replied':
+                        do = True
+
+                    if args['TotalMessages'] and do:
+
+                        if not check_staff(roles):
                             dictTotalMessages['Q'] += 1
                         else:
                             dictTotalMessages['S'] += 1
+
+                        if do:
                             if row[1] in dictTotalMessages:
                                 dictTotalMessages[row[1]] += 1
                             else:
                                 dictTotalMessages[row[1]] = 1
 
-                    if args['Daily'] or args['User'] is not True:
-                        if row[1] != 'non staff replied' or args['User'] == 'non staff replied':
-                            day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
-                            if day in dictDaily.keys():
-                                dictDaily[day] += 1
-                            else:
-                                dictDaily[day] = 1
+                    if args['Daily'] or args['User'] is not True and do:
+                        day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
+                        if day in dictDaily.keys():
+                            dictDaily[day] += 1
+                        else:
+                            dictDaily[day] = 1
 
                     if args['ConsecutiveTime']:
                         to_remove = []
 
-                        if row[1] != 'non staff replied':
-                            if row[1] not in active_members:
-                                active_members[row[1]] = {'start_time': current_time, 'last_time': current_time}
-                                
-                            
+                        if row[1] not in active_members and do:
+                            active_members[row[1]] = {'start_time': current_time, 'last_time': current_time}
+                        elif do:
                             active_members[row[1]]['last_time'] = current_time
 
                         for user_id, info in active_members.items():
@@ -137,8 +155,7 @@ async def main():
                             active_members.pop(user_id)
 
                     if args['ReplyTimes']:
-
-                        if row[1] == "non staff replied":
+                        if not check_staff(roles) or row[1] == 'non staff replied':
                             non_staff_replies += 1
                             if non_staff_replies >= args['IgnoreMessages']:
                                 messages_times.append(current_time)
@@ -152,50 +169,43 @@ async def main():
                                 messages_times = []
                             non_staff_replies = 0
 
-                    if args['DailyMessages']:
-                        if row[1] != "non staff replied":
-                            if row[1] in dictDailyMessages:
-                                if current_time.day in dictDailyMessages[row[1]]:
-                                    dictDailyMessages[row[1]][current_time.day] += 1
-                                else:
-                                    dictDailyMessages[row[1]][current_time.day] = 1
+                    if args['DailyMessages'] and do:
+                        if row[1] in dictDailyMessages:
+                            if current_time.day in dictDailyMessages[row[1]]:
+                                dictDailyMessages[row[1]][current_time.day] += 1
                             else:
-                                dictDailyMessages[row[1]] = {current_time.day: 1}
+                                dictDailyMessages[row[1]][current_time.day] = 1
+                        else:
+                            dictDailyMessages[row[1]] = {current_time.day: 1}
                     
-                    if args['RoleDistribution']:
-                        if len(row) == 3:
-                            user_roles = ast.literal_eval(row[2])
-                            if len((set(user_roles) & set(STAFF_ROLES))) > 1:
-                                to_add = [int(i) for i in user_roles if int(i) in STAFF_ROLES]
-                            else:
-                                to_add = [int(i) for i in user_roles if int(i) in ROLES]
+                    if args['RoleDistribution'] and len(row) == 3:
+                        to_add = [int(i) for i in roles if int(i) in ROLES]
 
-                            if JAVA_ROLE in user_roles and BEDROCK_ROLE not in user_roles:
-                                dictRoleDistribution['Java Only'] += 1
-                            elif JAVA_ROLE not in user_roles and BEDROCK_ROLE in user_roles:
-                                dictRoleDistribution['Bedrock Only'] += 1
-                            elif JAVA_ROLE in user_roles and BEDROCK_ROLE in user_roles:
-                                dictRoleDistribution['Dual'] += 1
+                        if JAVA_ROLE in roles and BEDROCK_ROLE not in roles:
+                            dictRoleDistribution['Java Only'] += 1
+                        elif JAVA_ROLE not in roles and BEDROCK_ROLE in roles:
+                            dictRoleDistribution['Bedrock Only'] += 1
+                        elif JAVA_ROLE in roles and BEDROCK_ROLE in roles:
+                            dictRoleDistribution['Dual'] += 1
 
-                            if to_add == []:
-                                dictRoleDistribution['No Roles'] += 1
-                            else:
-                                for i in to_add:
-                                    dictRoleDistribution[i] += 1
+                        if to_add == []:
+                            dictRoleDistribution['No Roles'] += 1
+                        else:
+                            for i in to_add:
+                                dictRoleDistribution[i] += 1
                             
-                            RolesMsg += 1
+                        RolesMsg += 1
                     
-                    if args['HourlyActivity'] or args['User'] is not True:
-                        if row[1] != 'non staff replied':
-                            dictHourlyActivity[current_time.hour] += 1
-                            dictAccurateHourlyActivity[(current_time.hour, floor(current_time.minute/10) * 10)] += 1
+                    if args['HourlyActivity'] or args['User'] is not True and do:
+                        dictHourlyActivity[current_time.hour] += 1
+                        dictAccurateHourlyActivity[(current_time.hour, floor(current_time.minute/10) * 10)] += 1
 
 
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
     if args['User'] is True:
-        amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate"]])
+        amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate", "Path", "StaffHelp"]])
     else:
         amount_of_graphs = 2
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
@@ -262,7 +272,7 @@ async def main():
         dictReplyTimes = {key: 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictReplyTimes.items()}
         dictAccurateReplyTimes = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictAccurateReplyTimes.items()}
 
-        if args['Accurate']:
+        if args['Accurate'] is True:
             used = dictAccurateReplyTimes
         else:
             used = dictReplyTimes
@@ -275,7 +285,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
 
-        if args['Accurate']:
+        if args['Accurate'] is True:
             plt.plot(l0, l1)
             plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
@@ -322,7 +332,7 @@ async def main():
         dictHourlyActivity = {key: (dictHourlyActivity[key]/total_msgs)*100 for key in dictHourlyActivity.keys()}
         dictAccurateHourlyActivity = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": (dictAccurateHourlyActivity[key]/total_msgs)*100 for key in dictAccurateHourlyActivity.keys()}
 
-        if args['Accurate']:
+        if args['Accurate'] is True:
             used = dictAccurateHourlyActivity
         else:
             used = dictHourlyActivity
@@ -337,7 +347,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
 
-        if args['Accurate']:
+        if args['Accurate'] is True:
             plt.plot(l0, l1)
             plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
@@ -384,7 +394,7 @@ async def main():
             out['TotalMessages'] = dictTotalMessages
         
         if args['ReplyTimes'] and args['User'] is True:
-            if args['Accurate']:
+            if args['Accurate'] is True:
                 out['AccurateReplyTimes'] = {key: value for key, value in dictAccurateReplyTimes.items()}
             else:
                 out['ReplyTimes'] = dictReplyTimes
@@ -396,7 +406,7 @@ async def main():
             out['RoleDistribution'] = dictRoleDistribution
         
         if args['HourlyActivity'] or args['User'] is not True:
-            if args['Accurate']:
+            if args['Accurate'] is True:
                 out['AccurateHourlyActivity'] = {key: value for key, value in dictAccurateHourlyActivity.items()}
             else:
                 out['HourlyActivity'] = dictHourlyActivity

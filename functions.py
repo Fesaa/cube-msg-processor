@@ -3,9 +3,13 @@ import json
 import asyncio
 import requests
 from typing import Union
+from constants import STAFF_ROLES
 
 config = json.load(open('json/config.json', encoding='utf-8'))
 TOKEN = config.get('TOKEN')
+
+def check_staff(roles_list: list) -> bool:
+    return bool(set(roles_list) & set(STAFF_ROLES))
 
 def font_size(length: int) -> str:
     if length in range(0,10):
