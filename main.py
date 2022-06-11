@@ -231,7 +231,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.barh(l0, l1, color = colour_list(l1))
-        plt.title(f'Amount of msg {"per member" if options["User"] is True else ""} {"in percentage of the total" if options["Percentages"] else ""}')
+        plt.title(f'Amount of msg {"per member" if options["User"] is True else ""} {"%" if options["Percentages"] else ""}')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if options['Daily'] or options['User'] is not True:
@@ -247,7 +247,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.barh(l0, l1, color = colour_list(l1))
-        plt.title('Amount msg by per day')
+        plt.title(f'Amount msg by per day {"%" if options["Percentages"] else ""}')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if options['ConsecutiveTime'] and options['User'] is True:
@@ -291,7 +291,7 @@ async def main():
             plt.barh(l0, l1, color = colour_list(l1))
             plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
-        plt.title(f'Avarage wait time on a question for a given hour. Ignores {options["IgnoreMessages"]} messages')
+        plt.title(f'Average wait time on a question per {"hour" if not options["Accurate"] else "10 minutes"}. Ignores {options["IgnoreMessages"]} messages')
 
     if options['DailyMessages'] and options['User'] is True:
         dictDailyMessages = {key: sum([j for j in value.values()])/(len([j for j in value.values()])) for key, value in dictDailyMessages.items()}
@@ -305,7 +305,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.barh(l0, l1, color = colour_list(l1))
-        plt.title(f'Avarage msg per member on a day')
+        plt.title(f'Average msg per member on a day')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if options['RoleDistribution'] and options['User'] is True:
@@ -324,7 +324,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.barh(l0, l1, color = colour_list(l1))
-        plt.title(f'Role Distribution in percentage over {RolesMsg} messages')
+        plt.title(f'Role Distribution over {RolesMsg} messages %')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
     
     if options['HourlyActivity'] or options['User'] is not True:
@@ -353,7 +353,7 @@ async def main():
             plt.barh(l0, l1, color = colour_list(l1))
             plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
         
-        plt.title(f'Hourly Activity in percentage')
+        plt.title(f'Hourly Activity %')
     
     print(summary)
     plt.subplots_adjust(left=0.1, bottom=0.10, right=0.9, top=0.93 if options['User'] is True else 0.80, wspace=0.2, hspace=0.2)
@@ -368,12 +368,18 @@ async def main():
     warnings.filterwarnings("ignore")
     if options['ShowGraphs']:
         plt.show()
+
+    output_file_name = str(datetime.now().date()).replace('-', '')
+    if options['User'] is not True:
+        output_file_name += '_' + (await get_name_from_id(options["User"], True))
+    if options['StaffHelp']:
+        output_file_name = '_' + options['StaffHelp']
     
     time_saving_fig0 = time.time()
-    if path.exists(f'out/{options["FigName"]}.png'):
-        remove(f'out/{options["FigName"]}.png')
+    if path.exists(f'out/{output_file_name}.png'):
+        remove(f'out/{output_file_name}.png')
     
-    plt.savefig(f'out/{options["FigName"]}.png', dpi=100)
+    plt.savefig(f'out/{output_file_name}.png', dpi=500)
     time_saving_fig1 = time.time()
     
     out = {}
