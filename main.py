@@ -5,7 +5,7 @@ import json
 import asyncio
 import warnings
 import matplotlib.pyplot as plt
-from os import listdir
+from os import listdir, remove, path
 
 from math import floor
 from colorama import Fore, Style
@@ -90,7 +90,7 @@ async def main():
                 if str(current_time.date()) < earliest_date and args['StartDate'] == 'First Date':
                     earliest_date = str(current_time.date())
                 
-                if start_date <= str(current_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True):
+                if start_date <= str(current_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True or args['User'] == 'Q'):
                     total_msgs += 1
 
                     do = False
@@ -107,13 +107,11 @@ async def main():
                                 do = True
                     elif row[1] != 'non staff replied':
                         do = True
-
                     if args['TotalMessages'] and do:
 
-                        if not check_staff(roles):
-                            dictTotalMessages['Q'] += 1
-                        else:
-                            dictTotalMessages['S'] += 1
+                        if args['StaffHelp']:
+                            if (check_staff(roles) and len(row) == 3) or row[1] != 'non staff replied':
+                                dictTotalMessages['S'] += 1 
 
                         if do:
                             if row[1] in dictTotalMessages:
@@ -121,7 +119,7 @@ async def main():
                             else:
                                 dictTotalMessages[row[1]] = 1
 
-                    if args['Daily'] or args['User'] is not True and do:
+                    if (args['Daily'] or args['User'] is not True) and do:
                         day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
                         if day in dictDaily.keys():
                             dictDaily[day] += 1
@@ -155,7 +153,7 @@ async def main():
                             active_members.pop(user_id)
 
                     if args['ReplyTimes']:
-                        if not check_staff(roles) or row[1] == 'non staff replied':
+                        if (not check_staff(roles) and len(row) == 3) or row[1] == 'non staff replied':
                             non_staff_replies += 1
                             if non_staff_replies >= args['IgnoreMessages']:
                                 messages_times.append(current_time)
@@ -200,12 +198,14 @@ async def main():
                         dictHourlyActivity[current_time.hour] += 1
                         dictAccurateHourlyActivity[(current_time.hour, floor(current_time.minute/10) * 10)] += 1
 
+    if args['StaffHelp']:
+        dictTotalMessages['Q'] = total_msgs - dictTotalMessages['S']
 
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
     if args['User'] is True:
-        amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["SaveGraphs", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate", "Path", "StaffHelp"]])
+        amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["FigName", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate", "Path", "StaffHelp"]])
     else:
         amount_of_graphs = 2
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
@@ -216,7 +216,7 @@ async def main():
     summary = f"{Fore.GREEN}Global Summary: {Style.RESET_ALL}\n\n"
 
     plt.style.use('ggplot')
-    plt.figure(facecolor='silver')
+    plt.figure(facecolor='silver', figsize=(15 if args['User'] is True else 10, 5 * amount_of_graphs//2))
 
     if args['TotalMessages'] and args['User'] is True:
         dictTotalMessages = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictTotalMessages.items()}
@@ -294,7 +294,7 @@ async def main():
 
         plt.title(f'Avarage wait time on a question for a given hour. Ignores {args["IgnoreMessages"]} messages')
 
-    if args['DailyMessages']:
+    if args['DailyMessages'] and args['User'] is True:
         dictDailyMessages = {key: sum([j for j in value.values()])/(len([j for j in value.values()])) for key, value in dictDailyMessages.items()}
         dictDailyMessages = await correct_dict_for_id(dictDailyMessages, not args['UpdateJson'])
         dictDailyMessages = dict(sorted(dictDailyMessages.items(), key=lambda item: item[1], reverse=True))
@@ -357,6 +357,9 @@ async def main():
         plt.title(f'Hourly Activity in percentage')
     
     print(summary)
+    plt.subplots_adjust(left=0.1, bottom=0.10, right=0.9, top=0.93 if args['User'] is True else 0.80, wspace=0.2, hspace=0.2)
+    plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}',
+    color = 'midnightblue')
 
     processing_dicts_time_end = time.time()
 
@@ -368,18 +371,15 @@ async def main():
     with open('json/external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
         json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
 
-    if args['SaveGraphs']:
-        warnings.filterwarnings("ignore")
-        plt.savefig('out.png')
-
     if args['ShowGraphs']:
-
-        plt.subplots_adjust(left=0.1, bottom=0.15, right=0.9, top=0.9, wspace=0.2, hspace=0.2)
-        plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}',
-        color = 'midnightblue')
-
         warnings.filterwarnings("ignore")
         plt.show()
+    
+    if path.exists(f'out/{args["FigName"]}.png'):
+        remove(f'out/{args["FigName"]}.png')
+    
+    warnings.filterwarnings("ignore")
+    plt.savefig(f'out/{args["FigName"]}.png', dpi=150)
     
     if args['Output']:
         out = {}

@@ -38,8 +38,8 @@ command_line_options.add_option(CommandLineOption('MinTime', regex=r'\b(\d{1,2}\
                                 info=f'{Fore.CYAN}MinTime{Style.RESET_ALL}: Minium time spend in the channel to be displayed on the graph.'))
 command_line_options.add_option(CommandLineOption('UpdateJson', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}UpdateJson{Style.RESET_ALL}: Save ID_CACHE to external_id_cache.json for future reference. When True, no usernames will be loaded from the json.'))
-command_line_options.add_option(CommandLineOption('SaveGraphs', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
-                                info=f"{Fore.CYAN}SaveGraphs{Style.RESET_ALL}: Save your figure to a .png in your cwd."))
+command_line_options.add_option(CommandLineOption('FigName', regex=RegexOptions.SIMPLE_STR, default_argument='output', return_type=str,
+                                info=f"{Fore.CYAN}FigName{Style.RESET_ALL}: Name of the saved .png file"))
 command_line_options.add_option(CommandLineOption('ShowGraphs', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
                                 info=f'{Fore.CYAN}ShowGraphs{Style.RESET_ALL}: Shows your graph after making it.'))
 command_line_options.add_option(CommandLineOption('Output', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
