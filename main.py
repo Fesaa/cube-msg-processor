@@ -20,31 +20,29 @@ async def main():
     FileNames = options['FileName']
 
     if not FileNames:
-        FileNames = [options['Path'] + i for i in listdir(options['Path'])]     
+        FileNames = [options['Path'] + i for i in listdir(options['Path']) if options['Path'] + i not in options['Exclude']]     
 
-    args = options
-
-    if args['TotalMessages'] or args['User'] is not True:
+    if options['TotalMessages'] or options['User'] is not True:
         dictTotalMessages = {"Q": 0, "S": 0}
 
-    if args['Daily'] or args['User'] is not True:
+    if options['Daily'] or options['User'] is not True:
         dictDaily = {}
 
-    if args['ConsecutiveTime']:
+    if options['ConsecutiveTime']:
         dictConsecutiveTime = {}
 
-    if args['ReplyTimes']:
+    if options['ReplyTimes']:
         dictReplyTimes = {i: [] for i in range(24)}
         dictAccurateReplyTimes = {(hour, minute): [] for hour in range(24) for minute in range(0,60,10)}
 
-    if args['DailyMessages']:
+    if options['DailyMessages']:
         dictDailyMessages = {}
     
-    if args['RoleDistribution']:
+    if options['RoleDistribution']:
         dictRoleDistribution = {i: 0 for i in ROLES.keys()}
         RolesMsg = 0
     
-    if args['HourlyActivity'] or args['User'] is not True:
+    if options['HourlyActivity'] or options['User'] is not True:
         dictHourlyActivity = {i: 0 for i in range(24)}
         dictAccurateHourlyActivity = {(hour, minute): 0 for hour in range(24) for minute in range(0,60,10)}
 
@@ -58,27 +56,27 @@ async def main():
             first_row = next(reader)
             current_time = 0
 
-            if args['ConsecutiveTime']:
+            if options['ConsecutiveTime']:
                     active_members = {}
 
             if index == 0:
                 total_msgs = 0
 
-                if args['ReplyTimes']:
+                if options['ReplyTimes']:
                     messages_times = []
                     non_staff_replies = 0
 
-                if args['StartDate'] == 'First Date':
+                if options['StartDate'] == 'First Date':
                     start_date = '0000-00-00'
                     earliest_date = '9999-12-31'
                 else:
-                    start_date = args['StartDate']
+                    start_date = options['StartDate']
                     earliest_date = start_date
                 
-                if args['EndDate'] == 'End Date':
+                if options['EndDate'] == 'End Date':
                     end_date = '9999-12-31'
                 else:
-                    end_date = args['EndDate']
+                    end_date = options['EndDate']
 
             for row in [first_row] + list(reader):
                 current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
@@ -87,29 +85,30 @@ async def main():
                 else:
                     roles = []
 
-                if str(current_time.date()) < earliest_date and args['StartDate'] == 'First Date':
+                if str(current_time.date()) < earliest_date and options['StartDate'] == 'First Date':
                     earliest_date = str(current_time.date())
                 
-                if start_date <= str(current_time.date()) <= end_date and (row[1] == args['User'] or args['User'] is True or args['User'] == 'Q'):
+                if start_date <= str(current_time.date()) <= end_date and (row[1] == options['User'] or options['User'] is True or options['User'] == 'Q'):
                     total_msgs += 1
 
                     do = False
-                    if args['StaffHelp']:
+                    if options['StaffHelp']:
                         if len(row) == 3:
                             if check_staff(roles):
                                 do = True
-                            elif args['User'] == 'Q':
+                            elif options['User'] == 'Q':
                                 do = True
                         else:
                             if row[1] != 'non staff replied':
                                 do = True
-                            elif args['User'] == 'Q':
+                            elif options['User'] == 'Q':
                                 do = True
                     elif row[1] != 'non staff replied':
                         do = True
-                    if args['TotalMessages'] and do:
 
-                        if args['StaffHelp']:
+                    if options['TotalMessages'] and do:
+
+                        if options['StaffHelp']:
                             if (check_staff(roles) and len(row) == 3) or row[1] != 'non staff replied':
                                 dictTotalMessages['S'] += 1 
 
@@ -119,14 +118,14 @@ async def main():
                             else:
                                 dictTotalMessages[row[1]] = 1
 
-                    if (args['Daily'] or args['User'] is not True) and do:
+                    if (options['Daily'] or options['User'] is not True) and do:
                         day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
                         if day in dictDaily.keys():
                             dictDaily[day] += 1
                         else:
                             dictDaily[day] = 1
 
-                    if args['ConsecutiveTime']:
+                    if options['ConsecutiveTime']:
                         to_remove = []
 
                         if row[1] not in active_members and do:
@@ -152,13 +151,13 @@ async def main():
                         for user_id in to_remove:
                             active_members.pop(user_id)
 
-                    if args['ReplyTimes']:
+                    if options['ReplyTimes']:
                         if (not check_staff(roles) and len(row) == 3) or row[1] == 'non staff replied':
                             non_staff_replies += 1
-                            if non_staff_replies >= args['IgnoreMessages']:
+                            if non_staff_replies >= options['IgnoreMessages']:
                                 messages_times.append(current_time)
                         else:
-                            if non_staff_replies > args['IgnoreMessages']:
+                            if non_staff_replies > options['IgnoreMessages']:
                                 for times in messages_times:
                                     times: datetime
                                     dictReplyTimes[times.hour].append(current_time - times)
@@ -167,7 +166,7 @@ async def main():
                                 messages_times = []
                             non_staff_replies = 0
 
-                    if args['DailyMessages'] and do:
+                    if options['DailyMessages'] and do:
                         if row[1] in dictDailyMessages:
                             if current_time.day in dictDailyMessages[row[1]]:
                                 dictDailyMessages[row[1]][current_time.day] += 1
@@ -176,7 +175,7 @@ async def main():
                         else:
                             dictDailyMessages[row[1]] = {current_time.day: 1}
                     
-                    if args['RoleDistribution'] and len(row) == 3:
+                    if options['RoleDistribution'] and len(row) == 3:
                         to_add = [int(i) for i in roles if int(i) in ROLES]
 
                         if JAVA_ROLE in roles and BEDROCK_ROLE not in roles:
@@ -194,18 +193,18 @@ async def main():
                             
                         RolesMsg += 1
                     
-                    if args['HourlyActivity'] or args['User'] is not True and do:
+                    if options['HourlyActivity'] or options['User'] is not True and do:
                         dictHourlyActivity[current_time.hour] += 1
                         dictAccurateHourlyActivity[(current_time.hour, floor(current_time.minute/10) * 10)] += 1
 
-    if args['StaffHelp']:
+    if options['StaffHelp']:
         dictTotalMessages['Q'] = total_msgs - dictTotalMessages['S']
 
     file_reading_time_end = time.time()
     processing_dicts_time = time.time()
 
-    if args['User'] is True:
-        amount_of_graphs = sum([1 for key, value in args.items() if value and key not in ["FigName", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate", "Path", "StaffHelp"]])
+    if options['User'] is True:
+        amount_of_graphs = sum([1 for key, value in options.items() if value and key not in ["FigName", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate", "Path", "StaffHelp", "Exclude"]])
     else:
         amount_of_graphs = 2
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
@@ -216,32 +215,32 @@ async def main():
     summary = f"{Fore.GREEN}Global Summary: {Style.RESET_ALL}\n\n"
 
     plt.style.use('ggplot')
-    plt.figure(facecolor='silver', figsize=(15 if args['User'] is True else 10, 5 * amount_of_graphs//2))
+    plt.figure(facecolor='silver', figsize=(15 if options['User'] is True else 10, 5 * amount_of_graphs//2))
 
-    if args['TotalMessages'] and args['User'] is True:
-        dictTotalMessages = {key: (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictTotalMessages.items()}
-        dictTotalMessages = await correct_dict_for_id(dictTotalMessages, not args['UpdateJson'])
+    if options['TotalMessages'] and options['User'] is True:
+        dictTotalMessages = {key: (value/total_msgs)*100 if options['Percentages'] else value for key, value in dictTotalMessages.items()}
+        dictTotalMessages = await correct_dict_for_id(dictTotalMessages, not options['UpdateJson'])
         dictTotalMessages = dict(sorted(dictTotalMessages.items(), key=lambda item: item[1], reverse=True))
 
-        print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" if not args['Percentages'] else f"{key}: {round(value, 3)}%" for key, value in dictTotalMessages.items())]))
+        print(f'{Fore.MAGENTA}TotalMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" if not options['Percentages'] else f"{key}: {round(value, 3)}%" for key, value in dictTotalMessages.items())]))
         summary += "Top 3 Users with most messages\n\t" + \
-                "".join(f"{key}: {dictTotalMessages[key]}".ljust(25) if not args['Percentages'] else f"{key}: {round(dictTotalMessages[key], 3)}%".ljust(25) for key in list([i for i in dictTotalMessages.keys() if i not in ['Q', 'S']])[:3]) + "\n\n"
+                "".join(f"{key}: {dictTotalMessages[key]}".ljust(25) if not options['Percentages'] else f"{key}: {round(dictTotalMessages[key], 3)}%".ljust(25) for key in list([i for i in dictTotalMessages.keys() if i not in ['Q', 'S']])[:3]) + "\n\n"
 
-        l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > args['MinMsg'] if not args['Percentages'] and args['User'] is True else dictTotalMessages[i] > 1)]))
+        l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > options['MinMsg'] if not options['Percentages'] and options['User'] is True else dictTotalMessages[i] > 1)]))
         l1 = [dictTotalMessages[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
         plt.barh(l0, l1, color = colour_list(l1))
-        plt.title(f'Amount of msg {"per member" if args["User"] is True else ""} {"in percentage of the total" if args["Percentages"] else ""}')
+        plt.title(f'Amount of msg {"per member" if options["User"] is True else ""} {"in percentage of the total" if options["Percentages"] else ""}')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
-    if args['Daily'] or args['User'] is not True:
-        dictDaily = {str(key): (value/total_msgs)*100 if args['Percentages'] else value for key, value in dictDaily.items()}
+    if options['Daily'] or options['User'] is not True:
+        dictDaily = {str(key): (value/total_msgs)*100 if options['Percentages'] else value for key, value in dictDaily.items()}
         dictDaily = {key: dictDaily[key] for key in sorted(dictDaily.keys(), reverse=True)}
         
-        print(f'{Fore.MAGENTA}Daily{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" if not args['Percentages'] else f"{key}: {round(value, 3)}%" for key, value in dictDaily.items())]))
+        print(f'{Fore.MAGENTA}Daily{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {value}" if not options['Percentages'] else f"{key}: {round(value, 3)}%" for key, value in dictDaily.items())]))
         summary += "Top 3 most active days\n\t" + \
-                "".join(f'{inv_dict(dictDaily)[value]}: {value}'.ljust(25) if not args['Percentages'] else f"{inv_dict(dictDaily)[value]}: {round(value, 3)}%".ljust(25) for value in sorted(dictDaily.values(), reverse=True)[:3]) + "\n\n"
+                "".join(f'{inv_dict(dictDaily)[value]}: {value}'.ljust(25) if not options['Percentages'] else f"{inv_dict(dictDaily)[value]}: {round(value, 3)}%".ljust(25) for value in sorted(dictDaily.values(), reverse=True)[:3]) + "\n\n"
 
         l0 = list(reversed([i for i in dictDaily.keys()]))
         l1 = [dictDaily[i] for i in l0]
@@ -251,16 +250,16 @@ async def main():
         plt.title('Amount msg by per day')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
-    if args['ConsecutiveTime'] and args['User'] is True:
+    if options['ConsecutiveTime'] and options['User'] is True:
         dictConsecutiveTime = {key: sum([i.total_seconds()/(3600) for i in value]) for key, value in dictConsecutiveTime.items()}
-        dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime, not args['UpdateJson'])
+        dictConsecutiveTime = await correct_dict_for_id(dictConsecutiveTime, not options['UpdateJson'])
         dictConsecutiveTime = dict(sorted(dictConsecutiveTime.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}ConsecutiveTime{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictConsecutiveTime.items())]))
         summary += "Top 3 users with most time spend\n\t" + \
                 "".join(f"{key}: {round(dictConsecutiveTime[key], 2)}".ljust(25) for key in list(dictConsecutiveTime.keys())[:3]) + "\n\n"
 
-        l0 = list(reversed([key for key, value in dictConsecutiveTime.items() if value > args['MinTime']]))
+        l0 = list(reversed([key for key, value in dictConsecutiveTime.items() if value > options['MinTime']]))
         l1 = [dictConsecutiveTime[key] for key in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
@@ -268,11 +267,11 @@ async def main():
         plt.title('Total time spend in hours')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
-    if args['ReplyTimes'] and args['User'] is True:
+    if options['ReplyTimes'] and options['User'] is True:
         dictReplyTimes = {key: 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictReplyTimes.items()}
         dictAccurateReplyTimes = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictAccurateReplyTimes.items()}
 
-        if args['Accurate'] is True:
+        if options['Accurate'] is True:
             used = dictAccurateReplyTimes
         else:
             used = dictReplyTimes
@@ -285,23 +284,23 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
 
-        if args['Accurate'] is True:
+        if options['Accurate'] is True:
             plt.plot(l0, l1)
             plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
             plt.barh(l0, l1, color = colour_list(l1))
             plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
-        plt.title(f'Avarage wait time on a question for a given hour. Ignores {args["IgnoreMessages"]} messages')
+        plt.title(f'Avarage wait time on a question for a given hour. Ignores {options["IgnoreMessages"]} messages')
 
-    if args['DailyMessages'] and args['User'] is True:
+    if options['DailyMessages'] and options['User'] is True:
         dictDailyMessages = {key: sum([j for j in value.values()])/(len([j for j in value.values()])) for key, value in dictDailyMessages.items()}
-        dictDailyMessages = await correct_dict_for_id(dictDailyMessages, not args['UpdateJson'])
+        dictDailyMessages = await correct_dict_for_id(dictDailyMessages, not options['UpdateJson'])
         dictDailyMessages = dict(sorted(dictDailyMessages.items(), key=lambda item: item[1], reverse=True))
 
         print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
 
-        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > args['MinMsg']/5]))
+        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > options['MinMsg']/5]))
         l1 = [dictDailyMessages[i] for i in l0]
         plt.subplot(*graph_placements[current_index])
         current_index += 1
@@ -309,7 +308,7 @@ async def main():
         plt.title(f'Avarage msg per member on a day')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
-    if args['RoleDistribution'] and args['User'] is True:
+    if options['RoleDistribution'] and options['User'] is True:
         dictRoleDistribution = {key: (dictRoleDistribution[key]/RolesMsg)*100 for key in dictRoleDistribution.keys()}
         dictRoleDistribution = dict(sorted(dictRoleDistribution.items(), key=lambda item: item[1], reverse=True))
 
@@ -328,11 +327,11 @@ async def main():
         plt.title(f'Role Distribution in percentage over {RolesMsg} messages')
         plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
     
-    if args['HourlyActivity'] or args['User'] is not True:
+    if options['HourlyActivity'] or options['User'] is not True:
         dictHourlyActivity = {key: (dictHourlyActivity[key]/total_msgs)*100 for key in dictHourlyActivity.keys()}
         dictAccurateHourlyActivity = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": (dictAccurateHourlyActivity[key]/total_msgs)*100 for key in dictAccurateHourlyActivity.keys()}
 
-        if args['Accurate'] is True:
+        if options['Accurate'] is True:
             used = dictAccurateHourlyActivity
         else:
             used = dictHourlyActivity
@@ -347,7 +346,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
 
-        if args['Accurate'] is True:
+        if options['Accurate'] is True:
             plt.plot(l0, l1)
             plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
@@ -357,62 +356,63 @@ async def main():
         plt.title(f'Hourly Activity in percentage')
     
     print(summary)
-    plt.subplots_adjust(left=0.1, bottom=0.10, right=0.9, top=0.93 if args['User'] is True else 0.80, wspace=0.2, hspace=0.2)
-    plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < args["EndDate"] else args["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(args["User"], not args["UpdateJson"]) if args["User"] is not True else ""}',
+    plt.subplots_adjust(left=0.1, bottom=0.10, right=0.9, top=0.93 if options['User'] is True else 0.80, wspace=0.2, hspace=0.2)
+    plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < options["EndDate"] else options["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(options["User"], not options["UpdateJson"]) if options["User"] is not True else ""}',
     color = 'midnightblue')
 
     processing_dicts_time_end = time.time()
 
+    with open('json/external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
+        json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
+
+    warnings.filterwarnings("ignore")
+    if options['ShowGraphs']:
+        plt.show()
+    
+    time_saving_fig0 = time.time()
+    if path.exists(f'out/{options["FigName"]}.png'):
+        remove(f'out/{options["FigName"]}.png')
+    
+    plt.savefig(f'out/{options["FigName"]}.png', dpi=100)
+    time_saving_fig1 = time.time()
+    
+    out = {}
+
+    if options['Daily'] or options['User'] is not True:
+        out['Daily'] = dictDaily
+    
+    if options['ConsecutiveTime'] and options['User'] is True:
+        out['ConsecutiveTime'] = dictConsecutiveTime
+    
+    if options['TotalMessages'] and options['User'] is True:
+        out['TotalMessages'] = dictTotalMessages
+    
+    if options['ReplyTimes'] and options['User'] is True:
+        if options['Accurate'] is True:
+            out['AccurateReplyTimes'] = {key: value for key, value in dictAccurateReplyTimes.items()}
+        else:
+            out['ReplyTimes'] = dictReplyTimes
+    
+    if options['DailyMessages'] and options['User'] is True:
+        out['DailyMessages'] = dictDailyMessages
+    
+    if options['RoleDistribution'] and options['User'] is True:
+        out['RoleDistribution'] = dictRoleDistribution
+    
+    if options['HourlyActivity'] or options['User'] is not True:
+        if options['Accurate'] is True:
+            out['AccurateHourlyActivity'] = {key: value for key, value in dictAccurateHourlyActivity.items()}
+        else:
+            out['HourlyActivity'] = dictHourlyActivity
+    
+    with open('out/output.json', 'w', encoding='ISO 8859-1') as f:
+        json.dump(out, f)
+    
     print(f"--- Total Run Time {time.time() - total_run_time} seconds ---")
     print(f"--- File Reading Time {file_reading_time_end - file_reading_time} seconds ---")
     print(f"--- Making Plots Time {processing_dicts_time_end - processing_dicts_time -sum(ID_LOAD_TIME)} seconds ---")
     print(f"--- Fetching ids {sum(ID_LOAD_TIME)} seconds ---")
-
-    with open('json/external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
-        json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
-
-    if args['ShowGraphs']:
-        warnings.filterwarnings("ignore")
-        plt.show()
-    
-    if path.exists(f'out/{args["FigName"]}.png'):
-        remove(f'out/{args["FigName"]}.png')
-    
-    warnings.filterwarnings("ignore")
-    plt.savefig(f'out/{args["FigName"]}.png', dpi=150)
-    
-    if args['Output']:
-        out = {}
-
-        if args['Daily'] or args['User'] is not True:
-            out['Daily'] = dictDaily
-        
-        if args['ConsecutiveTime'] and args['User'] is True:
-            out['ConsecutiveTime'] = dictConsecutiveTime
-        
-        if args['TotalMessages'] and args['User'] is True:
-            out['TotalMessages'] = dictTotalMessages
-        
-        if args['ReplyTimes'] and args['User'] is True:
-            if args['Accurate'] is True:
-                out['AccurateReplyTimes'] = {key: value for key, value in dictAccurateReplyTimes.items()}
-            else:
-                out['ReplyTimes'] = dictReplyTimes
-        
-        if args['DailyMessages'] and args['User'] is True:
-            out['DailyMessages'] = dictDailyMessages
-        
-        if args['RoleDistribution'] and args['User'] is True:
-            out['RoleDistribution'] = dictRoleDistribution
-        
-        if args['HourlyActivity'] or args['User'] is not True:
-            if args['Accurate'] is True:
-                out['AccurateHourlyActivity'] = {key: value for key, value in dictAccurateHourlyActivity.items()}
-            else:
-                out['HourlyActivity'] = dictHourlyActivity
-        
-        with open('out/output.json', 'w', encoding='ISO 8859-1') as f:
-            json.dump(out, f)
+    print(f"--- Saving graph time {time_saving_fig1 - time_saving_fig0} seconds ---")
 
 if __name__ == '__main__':
     asyncio.run(main())

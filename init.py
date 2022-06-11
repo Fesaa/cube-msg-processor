@@ -8,6 +8,8 @@ file_option_one = command_line_options.add_option(CommandLineOption('FileName', 
 file_option_two = command_line_options.add_option(CommandLineOption('Path', regex=RegexOptions.SIMPLE_STR, return_type=str,
                                 info=f'{Fore.CYAN}FileName{Style.RESET_ALL}: specify a path to get all files from.'))
 command_line_options.add_dependency(file_option_one, file_option_two)
+command_line_options.add_option(CommandLineOption('Exclude', regex=RegexOptions.SIMPLE_STR, default_argument=[], return_type=List[str],
+                                info=f'{Fore.CYAN}Exclude{Style.RESET_ALL}: not use certain files. Should be used in combination with {Fore.CYAN}Path{Style.RESET_ALL}.'))
 command_line_options.add_option(CommandLineOption('Daily', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}Daily{Style.RESET_ALL}: Adds a graphs to your figure with the total amount of messages per day.\nMinimum of {Fore.MAGENTA}10{Style.RESET_ALL} messages are needed to be displayed on the graph.'))
 command_line_options.add_option(CommandLineOption('ConsecutiveTime', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
@@ -40,10 +42,8 @@ command_line_options.add_option(CommandLineOption('UpdateJson', regex=RegexOptio
                                 info=f'{Fore.CYAN}UpdateJson{Style.RESET_ALL}: Save ID_CACHE to external_id_cache.json for future reference. When True, no usernames will be loaded from the json.'))
 command_line_options.add_option(CommandLineOption('FigName', regex=RegexOptions.SIMPLE_STR, default_argument='output', return_type=str,
                                 info=f"{Fore.CYAN}FigName{Style.RESET_ALL}: Name of the saved .png file"))
-command_line_options.add_option(CommandLineOption('ShowGraphs', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
+command_line_options.add_option(CommandLineOption('ShowGraphs', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}ShowGraphs{Style.RESET_ALL}: Shows your graph after making it.'))
-command_line_options.add_option(CommandLineOption('Output', regex=RegexOptions.BOOL, default_argument=True, return_type=bool,
-                                info=f'{Fore.CYAN}Output{Style.RESET_ALL}: Output all dict to a .json file.'))
 command_line_options.add_option(CommandLineOption('Accurate', regex=RegexOptions.BOOL, default_argument=False,
                                 info=f'{Fore.CYAN}Accurate{Style.RESET_ALL}: More accurate division of times.'))
 command_line_options.add_option(CommandLineOption('StaffHelp', regex=RegexOptions.BOOL, return_type=bool, default_argument=False,
