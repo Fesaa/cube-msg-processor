@@ -44,7 +44,7 @@ command_line_options.add_option(CommandLineOption('FigName', regex=RegexOptions.
                                 info=f"{Fore.CYAN}FigName{Style.RESET_ALL}: Name of the saved .png file"))
 command_line_options.add_option(CommandLineOption('ShowGraphs', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}ShowGraphs{Style.RESET_ALL}: Shows your graph after making it.'))
-command_line_options.add_option(CommandLineOption('Accurate', regex=RegexOptions.BOOL, default_argument=False,
+command_line_options.add_option(CommandLineOption('Accurate', regex=RegexOptions.BOOL, default_argument=False, return_type=bool,
                                 info=f'{Fore.CYAN}Accurate{Style.RESET_ALL}: More accurate division of times.'))
 command_line_options.add_option(CommandLineOption('StaffHelp', regex=RegexOptions.BOOL, return_type=bool, default_argument=False,
                                 info=f'{Fore.CYAN}StaffHelp{Style.RESET_ALL}: Filters staff and non staff msg. Only use when Only checking staff help.'))

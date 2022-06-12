@@ -272,7 +272,7 @@ async def main():
         dictReplyTimes = {key: 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictReplyTimes.items()}
         dictAccurateReplyTimes = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictAccurateReplyTimes.items()}
 
-        if options['Accurate'] is True:
+        if options['Accurate']:
             used = dictAccurateReplyTimes
         else:
             used = dictReplyTimes
@@ -285,7 +285,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
 
-        if options['Accurate'] is True:
+        if options['Accurate']:
             plt.plot(l0, l1)
             plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
@@ -332,7 +332,7 @@ async def main():
         dictHourlyActivity = {key: (dictHourlyActivity[key]/total_msgs)*100 for key in dictHourlyActivity.keys()}
         dictAccurateHourlyActivity = {f"{key[0]}:{key[1]}{0 if key[1] < 10 else ''}": (dictAccurateHourlyActivity[key]/total_msgs)*100 for key in dictAccurateHourlyActivity.keys()}
 
-        if options['Accurate'] is True:
+        if options['Accurate']:
             used = dictAccurateHourlyActivity
         else:
             used = dictHourlyActivity
@@ -347,7 +347,7 @@ async def main():
         plt.subplot(*graph_placements[current_index])
         current_index += 1
 
-        if options['Accurate'] is True:
+        if options['Accurate']:
             plt.plot(l0, l1)
             plt.xticks(l0[0::6], l0[0::6], rotation='vertical', fontsize=font_size(24))
         else:
@@ -400,7 +400,7 @@ async def main():
         out['TotalMessages'] = dictTotalMessages
     
     if options['ReplyTimes'] and options['User'] is True:
-        if options['Accurate'] is True:
+        if options['Accurate']:
             out['AccurateReplyTimes'] = {key: value for key, value in dictAccurateReplyTimes.items()}
         else:
             out['ReplyTimes'] = dictReplyTimes
@@ -412,7 +412,7 @@ async def main():
         out['RoleDistribution'] = dictRoleDistribution
     
     if options['HourlyActivity'] or options['User'] is not True:
-        if options['Accurate'] is True:
+        if options['Accurate']:
             out['AccurateHourlyActivity'] = {key: value for key, value in dictAccurateHourlyActivity.items()}
         else:
             out['HourlyActivity'] = dictHourlyActivity
