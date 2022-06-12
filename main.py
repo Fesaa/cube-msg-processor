@@ -64,19 +64,20 @@ async def main():
 
                 if options['ReplyTimes']:
                     messages_times = []
-                    non_staff_replies = 0
 
                 if options['StartDate'] == 'First Date':
                     start_date = '0000-00-00'
-                    earliest_date = '9999-12-31'
+                    earliest_date: str = '9999-12-31'
                 else:
                     start_date = options['StartDate']
                     earliest_date = start_date
                 
                 if options['EndDate'] == 'End Date':
                     end_date = '9999-12-31'
+                    last_date = '0000-00-00'
                 else:
                     end_date = options['EndDate']
+                    last_date = end_date
 
             for row in [first_row] + list(reader):
                 current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
@@ -87,6 +88,9 @@ async def main():
 
                 if str(current_time.date()) < earliest_date and options['StartDate'] == 'First Date':
                     earliest_date = str(current_time.date())
+                
+                if last_date < str(current_time.date()) and options['EndDate'] == 'End Date':
+                    last_date = str(current_time.date()) 
                 
                 if start_date <= str(current_time.date()) <= end_date and (row[1] == options['User'] or options['User'] is True or options['User'] == 'Q'):
                     total_msgs += 1
@@ -153,18 +157,15 @@ async def main():
 
                     if options['ReplyTimes']:
                         if (not check_staff(roles) and len(row) == 3) or row[1] == 'non staff replied':
-                            non_staff_replies += 1
-                            if non_staff_replies >= options['IgnoreMessages']:
-                                messages_times.append(current_time)
+                            messages_times.append(current_time)
                         else:
-                            if non_staff_replies > options['IgnoreMessages']:
-                                for times in messages_times:
-                                    times: datetime
-                                    dictReplyTimes[times.hour].append(current_time - times)
-                                    dictAccurateReplyTimes[(times.hour, floor(times.minute/10)*10)].append(current_time - times)
 
-                                messages_times = []
-                            non_staff_replies = 0
+                            for times in messages_times[options['IgnoreMessages'] if len(messages_times) > 3 else 0:]:
+                                times: datetime
+                                dictReplyTimes[times.hour].append(current_time - times)
+                                dictAccurateReplyTimes[(times.hour, floor(times.minute/10)*10)].append(current_time - times)
+
+                            messages_times = []
 
                     if options['DailyMessages'] and do:
                         if row[1] in dictDailyMessages:
@@ -210,7 +211,7 @@ async def main():
     graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
     current_index = 0
 
-    print(f'Data from {earliest_date} until {current_time.date()}')
+    print(f'Data from {earliest_date} until {last_date}')
 
     summary = f"{Fore.GREEN}Global Summary: {Style.RESET_ALL}\n\n"
 
@@ -369,15 +370,20 @@ async def main():
     if options['ShowGraphs']:
         plt.show()
 
-    output_file_name = str(datetime.now().date()).replace('-', '')
+    output_file_name = str(earliest_date).replace('-', '') + "-" + str(last_date).replace('-', '')
     if options['User'] is not True:
         output_file_name += '_' + (await get_name_from_id(options["User"], True))
     if options['StaffHelp']:
-        output_file_name = '_' + options['StaffHelp']
+        output_file_name += '_StaffHelp'
+    
+    n = 0
+    output_file_name += '_0'
     
     time_saving_fig0 = time.time()
-    if path.exists(f'out/{output_file_name}.png'):
-        remove(f'out/{output_file_name}.png')
+    while path.exists(f'out/{output_file_name}.png'):
+        n += 1
+        output_file_name = output_file_name[:-1]
+        output_file_name += str(n)
     
     plt.savefig(f'out/{output_file_name}.png', dpi=500)
     time_saving_fig1 = time.time()
