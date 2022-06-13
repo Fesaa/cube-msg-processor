@@ -18,6 +18,17 @@ py -m pip install git+https://github.com/Fesaa/CommandLineOptions
 # macOS/Linux
 python3 -m pip install git+https://github.com/Fesaa/CommandLineOptions
 ```
+And two other "normal" modules:
+```git
+#Windows
+py -m pip install requests
+py -m pip install matplotlib
+
+# macOS/Linux
+python3 -m pip install requests
+python3 -m pip install matplotlib
+```
+Lastly, remove ```.example``` from ```config.json.example```, and edit the file if you want. More info on this below!
 ___
 ## Usage
 Once you've cloned the repository and installed the needed modules. You can start making graphs with the data in ```input/```. 
