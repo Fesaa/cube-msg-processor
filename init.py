@@ -48,5 +48,3 @@ command_line_options.add_option(CommandLineOption('Accurate', regex=RegexOptions
                                 info=f'{Fore.CYAN}Accurate{Style.RESET_ALL}: More accurate division of times.'))
 command_line_options.add_option(CommandLineOption('StaffHelp', regex=RegexOptions.BOOL, return_type=bool, default_argument=False,
                                 info=f'{Fore.CYAN}StaffHelp{Style.RESET_ALL}: Filters staff and non staff msg. Only use when Only checking staff help.'))
-
-options = command_line_options.on_start()
