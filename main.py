@@ -5,7 +5,7 @@ import json
 import asyncio
 import warnings
 import matplotlib.pyplot as plt
-from os import listdir, remove, path
+from os import listdir, path
 
 from math import floor
 from colorama import Fore, Style
@@ -228,12 +228,13 @@ async def main():
                 "".join(f"{key}: {dictTotalMessages[key]}".ljust(25) if not options['Percentages'] else f"{key}: {round(dictTotalMessages[key], 3)}%".ljust(25) for key in list([i for i in dictTotalMessages.keys() if i not in ['Q', 'S']])[:3]) + "\n\n"
 
         l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > options['MinMsg'] if not options['Percentages'] and options['User'] is True else dictTotalMessages[i] > 1)]))
-        l1 = [dictTotalMessages[key] for key in l0]
-        plt.subplot(*graph_placements[current_index])
-        current_index += 1
-        plt.barh(l0, l1, color = colour_list(l1))
-        plt.title(f'Amount of msg {"per member" if options["User"] is True else ""} {"%" if options["Percentages"] else ""}')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
+        if len(l0) > 0:
+            l1 = [dictTotalMessages[key] for key in l0]
+            plt.subplot(*graph_placements[current_index])
+            current_index += 1
+            plt.barh(l0, l1, color = colour_list(l1))
+            plt.title(f'Amount of msg {"per member" if options["User"] is True else ""} {"%" if options["Percentages"] else ""}')
+            plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if options['Daily'] or options['User'] is not True:
         dictDaily = {str(key): (value/total_msgs)*100 if options['Percentages'] else value for key, value in dictDaily.items()}
@@ -261,12 +262,13 @@ async def main():
                 "".join(f"{key}: {round(dictConsecutiveTime[key], 2)}".ljust(25) for key in list(dictConsecutiveTime.keys())[:3]) + "\n\n"
 
         l0 = list(reversed([key for key, value in dictConsecutiveTime.items() if value > options['MinTime']]))
-        l1 = [dictConsecutiveTime[key] for key in l0]
-        plt.subplot(*graph_placements[current_index])
-        current_index += 1
-        plt.barh(l0, l1, color = colour_list(l1))
-        plt.title('Total time spend in hours')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
+        if len(l0) > 0:
+            l1 = [dictConsecutiveTime[key] for key in l0]
+            plt.subplot(*graph_placements[current_index])
+            current_index += 1
+            plt.barh(l0, l1, color = colour_list(l1))
+            plt.title('Total time spend in hours')
+            plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if options['ReplyTimes'] and options['User'] is True:
         dictReplyTimes = {key: 0 if len(value) == 0 else sum(delta_t.total_seconds()/60 for delta_t in value)/len(value) for key, value in  dictReplyTimes.items()}
@@ -302,12 +304,13 @@ async def main():
         print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
 
         l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > options['MinMsg']/5]))
-        l1 = [dictDailyMessages[i] for i in l0]
-        plt.subplot(*graph_placements[current_index])
-        current_index += 1
-        plt.barh(l0, l1, color = colour_list(l1))
-        plt.title(f'Average msg per member on a day')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
+        if len(l0) > 0:
+            l1 = [dictDailyMessages[i] for i in l0]
+            plt.subplot(*graph_placements[current_index])
+            current_index += 1
+            plt.barh(l0, l1, color = colour_list(l1))
+            plt.title(f'Average msg per member on a day')
+            plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
 
     if options['RoleDistribution'] and options['User'] is True:
         dictRoleDistribution = {key: (dictRoleDistribution[key]/RolesMsg)*100 for key in dictRoleDistribution.keys()}
@@ -320,13 +323,14 @@ async def main():
                 "".join(f'{ROLES[key]}: {round(dictRoleDistribution[key], 3)}%'.ljust(25) for key in list(i for i in dictRoleDistribution.keys() if i in STAFF_ROLES)[:3]) + "\n\n"
 
         l0 = list(reversed([i for i in dictRoleDistribution.keys() if dictRoleDistribution[i] > 0]))
-        l1 = [dictRoleDistribution[i] for i in l0]
-        l0 = [ROLES[i] for i in l0]
-        plt.subplot(*graph_placements[current_index])
-        current_index += 1
-        plt.barh(l0, l1, color = colour_list(l1))
-        plt.title(f'Role Distribution over {RolesMsg} messages %')
-        plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))
+        if len(l0) > 0:
+            l1 = [dictRoleDistribution[i] for i in l0]
+            l0 = [ROLES[i] for i in l0]
+            plt.subplot(*graph_placements[current_index])
+            current_index += 1
+            plt.barh(l0, l1, color = colour_list(l1))
+            plt.title(f'Role Distribution over {RolesMsg} messages %')
+            plt.yticks(l0, l0, rotation='horizontal', fontsize=font_size(len(l0)))  
     
     if options['HourlyActivity'] or options['User'] is not True:
         dictHourlyActivity = {key: (dictHourlyActivity[key]/total_msgs)*100 for key in dictHourlyActivity.keys()}

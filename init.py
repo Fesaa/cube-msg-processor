@@ -6,7 +6,7 @@ command_line_options = CommandLineOptions()
 file_option_one = command_line_options.add_option(CommandLineOption('FileName', regex=r'\b.*\.csv\b', return_type=List[str],
                                 info=f'{Fore.CYAN}FileName{Style.RESET_ALL}: Filenames to process'))
 file_option_two = command_line_options.add_option(CommandLineOption('Path', regex=RegexOptions.SIMPLE_STR, return_type=str,
-                                info=f'{Fore.CYAN}FileName{Style.RESET_ALL}: specify a path to get all files from.'))
+                                info=f'{Fore.CYAN}Path{Style.RESET_ALL}: specify a path to get all files from.'))
 command_line_options.add_dependency(file_option_one, file_option_two)
 command_line_options.add_option(CommandLineOption('Exclude', regex=RegexOptions.SIMPLE_STR, default_argument=[], return_type=List[str],
                                 info=f'{Fore.CYAN}Exclude{Style.RESET_ALL}: not use certain files. Should be used in combination with {Fore.CYAN}Path{Style.RESET_ALL}.'))
