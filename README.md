@@ -18,7 +18,7 @@ py -m pip install git+https://github.com/Fesaa/CommandLineOptions
 # macOS/Linux
 python3 -m pip install git+https://github.com/Fesaa/CommandLineOptions
 ```
-And two other "normal" modules:
+And three other "normal" modules:
 ```git
 # Windows
 py -m pip install requests
@@ -33,15 +33,15 @@ python3 -m pip install tkcalendar
 Lastly, remove ```.example``` from ```config.json.example```, and edit the file if you want. More info on this below!
 ___
 ## Usage (Terminal)
-Once you've cloned the repository and installed the needed modules. You can start making graphs with the data in ```input/```. 
+Once you've cloned the repository and installed the needed modules. You can start making graphs with the data in ```processor/input/```. 
 Graphs will always be saved in ```out```, an example can be found there.
 And are only shown if you enable to option before running the file. A most basic example would be
 ```git 
 #Windows
-py main.py FileName=input/legancy_staff_help.csv,input/174845164899139584.csv StaffHelp=True
+py main.py FileName=processor/input/legancy_staff_help.csv,processor/input/174845164899139584.csv StaffHelp=True
 
 #macOS/Linux
-python3 main.py FileName=input/legancy_staff_help.csv,input/174845164899139584.csv StaffHelp=True
+python3 main.py FileName=processor/input/legancy_staff_help.csv,processor/input/174845164899139584.csv StaffHelp=True
 ```
 This will return the default graphs in for staff help. The tag ```StaffHelp=True``` **must** be given if you want to monitor staff help.
 
@@ -52,7 +52,7 @@ Some handy flags:
    * Example:
       * Would displayed information for all channels except staff help.
    ```git 
-   py main.py Path=input/ Exclude=input/legancy_staff_help.csv,input/174845164899139584.csv
+   py main.py Path=processor/input/ Exclude=processor/input/legancy_staff_help.csv,processor/input/174845164899139584.csv
    ```
       
 
@@ -60,7 +60,7 @@ Some handy flags:
    * Example: 
        * Would displayed information for ```Eva#1337```
    ```git
-   python3 main.py Path=input/ Exclude=input/legancy_staff_help.csv,input/174845164899139584.csv User=322007790208155650
+   python3 main.py Path=processor/input/ Exclude=processor/input/legancy_staff_help.csv,processor/input/174845164899139584.csv User=322007790208155650
    ```
      
 
@@ -69,14 +69,14 @@ Some handy flags:
    * Example: 
       * Would only display staff members with at least ```500``` messages in staff help and ```3``` hour spend in it.
       ```git
-      python3 main.py FileName=input/legancy_staff_help.csv,input/174845164899139584.csv StaffHelp=True MinMsg=500 MinTime=3
+      python3 main.py FileName=processor/input/legancy_staff_help.csv,processor/input/174845164899139584.csv StaffHelp=True MinMsg=500 MinTime=3
       ```
       
 * ```ShowGraphs``` displays graphs in a python window after computation.
    * Note: Graphs will always be saved.
    * Example: 
    ```git
-   py main.py Path=input/ ShowGraphs=True
+   py main.py Path=processor/input/ ShowGraphs=True
    ```
 
 All the flags are, these are made in ```init.py``` if you're interested;
