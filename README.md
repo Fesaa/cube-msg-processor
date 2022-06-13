@@ -12,7 +12,7 @@ git clone https://github.com/Fesaa/cube-msg-processor
 ```
 You also need a custom module made by to select the wanted options from within the terminal;
 ```git
-#Windows
+# Windows
 py -m pip install git+https://github.com/Fesaa/CommandLineOptions
 
 # macOS/Linux
@@ -20,17 +20,19 @@ python3 -m pip install git+https://github.com/Fesaa/CommandLineOptions
 ```
 And two other "normal" modules:
 ```git
-#Windows
+# Windows
 py -m pip install requests
 py -m pip install matplotlib
+py -m pip install tkcalendar
 
 # macOS/Linux
 python3 -m pip install requests
 python3 -m pip install matplotlib
+python3 -m pip install tkcalendar
 ```
 Lastly, remove ```.example``` from ```config.json.example```, and edit the file if you want. More info on this below!
 ___
-## Usage
+## Usage (Terminal)
 Once you've cloned the repository and installed the needed modules. You can start making graphs with the data in ```input/```. 
 Graphs will always be saved in ```out```, an example can be found there.
 And are only shown if you enable to option before running the file. A most basic example would be
@@ -109,6 +111,17 @@ py main.py --options
 #macOS/Linux
 python3 main.py --options
 ```
+___
+# Usage (GUI)
+You're also able to use a horrible looking GUI by simply running 
+```git
+# Windows
+py main.py
+
+# macOS/Linux
+python3 main.py
+````
+Instructions will reside in the GUI!
 ___
 # Username cache & Bot Token
 You can either get a User Token which would be breaking discord ToS so I highly advice against it and use UpdateJson to update the ```external_id_cache.json```. 
