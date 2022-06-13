@@ -10,15 +10,13 @@ cd <your folder>
 
 git clone https://github.com/Fesaa/cube-msg-processor
 ```
-You also need a custom module made by to select the wanted options from within the terminal and colorama for colour output in the terminal;
+You also need a custom module made by to select the wanted options from within the terminal;
 ```git
 #Windows
 py -m pip install git+https://github.com/Fesaa/CommandLineOptions
-py -m pip install colorama
 
 # macOS/Linux
 python3 -m pip install git+https://github.com/Fesaa/CommandLineOptions
-python3 -m pip install colorama
 ```
 ___
 ## Usage
