@@ -57,6 +57,9 @@ async def grapher(options: dict):
 
             if options['ConsecutiveTime']:
                     active_members = {}
+            
+            if options['ReplyTimes']:
+                messages_times = []
 
             if index == 0:
                 total_msgs = 0
