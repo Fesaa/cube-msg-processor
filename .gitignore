@@ -1,8 +1,7 @@
 __pycache__
-*.csv
 .DS_Store
-*.pdf
 *.png
 *.json
-module
 .vscode
+!external_id_cache.json
+!20220530-20220613_0.png
