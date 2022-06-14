@@ -12,11 +12,11 @@ class FileExplorer(CustomButton):
 
     
     def callback(self):
-        filenames = filedialog.askopenfilenames(initialdir = os.path.abspath(__file__).removesuffix('GUI/explorer.py') + 'processor/',
+        filenames = filedialog.askopenfilenames(initialdir = os.path.abspath(__file__).removesuffix('GUI/explorer.py') + 'data/',
                                           title = "Select files to use the processor on",
                                           filetypes = (("csv file","*.csv"),("all files","*.*")))
                                 
-        filenames = [i.removeprefix(os.path.abspath(__file__).removesuffix('GUI/explorer.py') + 'processor/') for i in filenames]
+        filenames = [i.removeprefix(os.path.abspath(__file__).removesuffix('GUI/explorer.py')) for i in filenames]
 
         if self.options['FileName'] is None:
             self.options['FileName'] = filenames

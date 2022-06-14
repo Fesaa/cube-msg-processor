@@ -5,7 +5,7 @@ import requests
 from typing import Union
 from processor.constants import STAFF_ROLES
 
-config = json.load(open('processor/json/config.json', encoding='utf-8'))
+config = json.load(open('data/json/config.json', encoding='utf-8'))
 TOKEN = config.get('TOKEN')
 
 def check_staff(roles_list: list) -> bool:
@@ -44,7 +44,7 @@ def colour_list(l: list[Union[float, int]]) -> list:
     return out
 
 ID_CACHE = {}
-EXTERNAL_ID_CACHE = json.load(open('processor/json/external_id_cache.json', encoding='ISO 8859-1'))
+EXTERNAL_ID_CACHE = json.load(open('data/json/external_id_cache.json', encoding='ISO 8859-1'))
 ID_LOAD_TIME = []
 
 async def get_name_from_id(user_id: int, external: bool) -> str:

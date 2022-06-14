@@ -49,7 +49,7 @@ async def grapher(options: dict):
 
     for index, FileName in enumerate(FileNames):
 
-        with open('processor/' + FileName, 'r') as f:
+        with open(FileName, 'r') as f:
             reader = csv.reader(f)
 
             first_row = next(reader)
@@ -369,7 +369,7 @@ async def grapher(options: dict):
 
     processing_dicts_time_end = time.time()
 
-    with open('processor/json/external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
+    with open('data/json/external_id_cache.json', 'w', encoding='ISO 8859-1') as f:
         json.dump({**EXTERNAL_ID_CACHE, **{str(key): value for key, value in ID_CACHE.items()}}, f)
 
     warnings.filterwarnings("ignore")
@@ -386,12 +386,12 @@ async def grapher(options: dict):
     output_file_name += '_0'
     
     time_saving_fig0 = time.time()
-    while path.exists(f'processor/out/{output_file_name}.png'):
+    while path.exists(f'data/out/{output_file_name}.png'):
         n += 1
         output_file_name = output_file_name[:-1]
         output_file_name += str(n)
     
-    plt.savefig(f'processor/out/{output_file_name}.png', dpi=500)
+    plt.savefig(f'data/out/{output_file_name}.png', dpi=500)
     time_saving_fig1 = time.time()
     
     out = {}
@@ -423,7 +423,7 @@ async def grapher(options: dict):
         else:
             out['HourlyActivity'] = dictHourlyActivity
     
-    with open('processor/out/output.json', 'w', encoding='ISO 8859-1') as f:
+    with open('data/out/output.json', 'w', encoding='ISO 8859-1') as f:
         json.dump(out, f)
     
     print(f"--- Total Run Time {time.time() - total_run_time} seconds ---")
