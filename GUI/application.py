@@ -1,3 +1,5 @@
+import sys
+import time
 import tkinter as tk
 from tkinter.messagebox import showwarning
 
@@ -25,8 +27,8 @@ class App(tk.Tk):
         intro_frame.grid(row=0, column=0)
 
         label = tk.Label(intro_frame, background='#C0C0C0', fg='#4A68AB',
-                        text='\nVery simply GUI implementation. \nSelect the options you want and press "OK" to continue.\n' \
-                            'Closing the window will also start the processing!\n\nBegin with selecting the files you want to process.\nThis option is required!',
+                        text='\nVery simply GUI implementation. \nSelect the options you want and press "Confirm" to continue.'
+                             '\n\nBegin with selecting the files you want to process.\nThis option is required!',
                             justify='left')
         label.grid(row=0, column=0)
 
@@ -78,14 +80,19 @@ class App(tk.Tk):
             modal.grid(row=r, column=c)
             r += 1
 
-        confirmation_button = tk.Button(self, highlightbackground='#C0C0C0', width=10, height=1, text="CONFIRM", command=self.on_window_close)
+        confirmation_button = tk.Button(self, highlightbackground='#C0C0C0', width=10, height=1, text="CONFIRM", command=self.on_confirm)
         confirmation_button.grid(row=8, column=0)
         
-    def on_window_close(self):
+    def on_confirm(self):
         if self.options['FileName'] is not None:
             self.destroy()
         else:
             showwarning(title='Missing required option', message='Missing required option')
+    
+    def on_window_close(self):
+        self.destroy()
+        time.sleep(1)
+        sys.exit()
 
     def get_options(self):
         return self.options

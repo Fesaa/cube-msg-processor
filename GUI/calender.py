@@ -33,8 +33,8 @@ class CalenderWindow(tk.Toplevel):
     def callback(self):
         date = self.cal.get_date().split('/')
         date = f'20{date[2] if int(date[2]) > 9 else f"0{date[2]}"}-{date[0] if int(date[0]) > 9 else f"0{date[0]}"}-{date[1] if int(date[1]) > 9 else f"0{date[1]}"}'
-        if (self.argument == 'StartDate' and date < ( '9999-99-99' if self.options['EndDate'] == 'End Date' else self.options['EndDate'])) or \
-            (self.argument == 'EndDate' and date > ( '0000-00-00' if self.options['StartDate'] == 'First Date' else self.options['StartDate'])):
+        if (self.argument == 'StartDate' and date <= ( '9999-99-99' if self.options['EndDate'] == 'End Date' else self.options['EndDate'])) or \
+            (self.argument == 'EndDate' and date >= ( '0000-00-00' if self.options['StartDate'] == 'First Date' else self.options['StartDate'])):
             self.options[self.argument] = date
             self.destroy()
         elif self.argument == 'StartDate':

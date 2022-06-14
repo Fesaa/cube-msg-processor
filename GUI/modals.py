@@ -10,11 +10,14 @@ class Modal(tk.Frame):
 
         self.options = options
         self.argument = argument
+        self.default = self.options[self.argument]
+
+        self.used = False
 
         self.TextInput = tk.Entry(self, highlightbackground='#C0C0C0', background='white', foreground='black')
-        confirm_button = CustomButton(self, self.options, command=self.callback, text=self.argument, background='#C0C0C0', width=10, height=1)
+        self.confirm_button= CustomButton(self, self.options, command=self.callback, text=self.argument, background='#C0C0C0', width=10, height=1)
         self.TextInput.grid(column=0, row=0)
-        confirm_button.grid(column=1, row=0)
+        self.confirm_button.grid(column=1, row=0)
 
     def callback(self):
         input = self.TextInput.get()
@@ -25,4 +28,9 @@ class Modal(tk.Frame):
             showerror("Invalid entry", message="Your input must be a number!")
             return 
         
-        self.options[self.argument] = argument
+        if not self.used:
+            self.options[self.argument] = argument
+        else:
+            self.options[self.argument] = self.default
+        self.used = not self.used
+        self.confirm_button.configure(fg = 'green' if self.used else 'red')
