@@ -75,7 +75,7 @@ class App(tk.Tk):
         modal_buttons_frame.grid(row=7, column=0)
 
 
-        for i in ['IgnoreMessages', 'MinMsg', 'MinTime']:
+        for i in ['IgnoreMessages', 'MinMsg', 'MinTime', 'User']:
             modal = Modal(modal_buttons_frame, self.options, i)
             modal.grid(row=r, column=c)
             r += 1

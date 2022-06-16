@@ -94,7 +94,7 @@ async def grapher(options: dict):
                 if last_date < str(current_time.date()) and options['EndDate'] == 'End Date':
                     last_date = str(current_time.date()) 
                 
-                if start_date <= str(current_time.date()) <= end_date and (row[1] == options['User'] or options['User'] is True or options['User'] == 'Q'):
+                if start_date <= str(current_time.date()) <= end_date and (row[1] == str(options['User']) or options['User'] is True or options['User'] == 'Q'):
                     total_msgs += 1
 
                     do = False

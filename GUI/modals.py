@@ -22,9 +22,11 @@ class Modal(tk.Frame):
     def callback(self):
         input = self.TextInput.get()
 
-        try:
+        if input.isdigit():
+            argument = int(input)
+        elif input.isdecimal():
             argument = float(input)
-        except ValueError:
+        else:
             showerror("Invalid entry", message="Your input must be a number!")
             return 
         
