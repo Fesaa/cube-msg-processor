@@ -4,6 +4,7 @@ import time
 import json
 import warnings
 import matplotlib.pyplot as plt
+from typing import Tuple
 from os import listdir, path
 
 from math import floor
@@ -159,13 +160,19 @@ async def grapher(options: dict):
 
                     if options['ReplyTimes']:
                         if (not check_staff(roles) and len(row) == 3) or row[1] == 'non staff replied':
-                            messages_times.append(current_time)
+                            try:
+                                last_msg = messages_times[-1]
+                            except IndexError:
+                                last_msg = (00, datetime(year=1, month=1, day=1))
+                            
+                            if last_msg[0] != row[1] or row[1] == 'non staff replied':
+                                messages_times.append((row[1], current_time))
                         else:
 
-                            for times in messages_times[options['IgnoreMessages'] if len(messages_times) > 3 else 0:]:
-                                times: datetime
-                                dictReplyTimes[times.hour].append(current_time - times)
-                                dictAccurateReplyTimes[(times.hour, floor(times.minute/10)*10)].append(current_time - times)
+                            for times in messages_times[options['IgnoreMessages'] if len(messages_times) > options['IgnoreMessages'] else 0:]:
+                                times: Tuple[int, datetime]
+                                dictReplyTimes[times[1].hour].append(current_time - times[1])
+                                dictAccurateReplyTimes[(times[1].hour, floor(times[1].minute/10)*10)].append(current_time - times[1])
 
                             messages_times = []
 
@@ -305,7 +312,7 @@ async def grapher(options: dict):
 
         print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
 
-        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > options['MinMsg']/5]))
+        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > (options['MinMsg']/5 if not options['Percentages'] else 1/5 * max(dictDailyMessages.values())) ]))
         if len(l0) > 0:
             l1 = [dictDailyMessages[i] for i in l0]
             plt.subplot(*graph_placements[current_index])
