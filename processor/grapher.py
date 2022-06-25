@@ -4,10 +4,10 @@ import time
 import json
 import warnings
 import matplotlib.pyplot as plt
-from typing import Tuple
-from os import listdir, path
 
 from math import floor
+from typing import Tuple
+from os import listdir, path
 from colorama import Fore, Style
 from datetime import datetime, timedelta
 
@@ -430,7 +430,7 @@ async def grapher(options: dict):
         else:
             out['HourlyActivity'] = dictHourlyActivity
     
-    with open('data/out/output.json', 'w', encoding='ISO 8859-1') as f:
+    with open(f'data/out/{output_file_name}.json', 'w', encoding='ISO 8859-1') as f:
         json.dump(out, f)
     
     print(f"--- Total Run Time {time.time() - total_run_time} seconds ---")
