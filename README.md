@@ -32,6 +32,9 @@ python3 -m pip install tkcalendar
 ```
 Lastly, remove ```.example``` from ```config.json.example```, and edit the file if you want. More info on this below!
 ___
+## CubeCraft specific
+If you're using the program to create graphs on Cube statistics. You'll be using the data provided in the repository. And thus also its `external_id_cache.json`. If you're not using this, you'll want to remove all files from `/input`, delete `external_id_cache.json` and remove `external_id_cache.json.example` to `external_id_cache.json`. You **need** to give a bot token if you're using your own cache. If you the input files provided by the repository, the cache will always contain all needed ids.
+___
 ## Usage (Terminal)
 Once you've cloned the repository and installed the needed modules. You can start making graphs with the data in ```processor/input/```. 
 Graphs will always be saved in ```out```, an example can be found there.
@@ -124,8 +127,7 @@ python3 main.py
 Instructions will reside in the GUI!
 ___
 # Username cache & Bot Token
-You can either get a User Token which would be breaking discord ToS so I highly advice against it and use UpdateJson to update the ```external_id_cache.json```. 
-Or keep using the one I made and keep the flag ```UpdateJson``` equal to ```False``` as per default. The recommend way might have some outdated username, this isn't that big of a deal, if you see your own username being outdated. You can open a pull request with it being fixed! *Or ping me in english general :(*
+Use your bot token as follows: `Bearer TOKEN` where `TOKEN` is your specific token. It is recommend to always use the cache to save API requests and not waste time waiting for rate limits.
 
 ___
 ## HELP!
