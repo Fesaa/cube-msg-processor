@@ -57,10 +57,11 @@ async def grapher(options: dict):
             current_time = 0
 
             if options['ConsecutiveTime']:
-                    active_members = {}
+                active_members = {}
             
             if options['ReplyTimes']:
                 messages_times = []
+                last_staff_time = datetime(year=1, month=1, day=1)
 
             if index == 0:
                 total_msgs = 0
@@ -98,7 +99,6 @@ async def grapher(options: dict):
                 if start_date <= str(current_time.date()) <= end_date and (row[1] == str(options['User']) or options['User'] is True or options['User'] == 'Q'):
                     total_msgs += 1
 
-                    do = False
                     if options['StaffHelp']:
                         if len(row) == 3:
                             if check_staff(roles):
@@ -112,6 +112,8 @@ async def grapher(options: dict):
                                 do = True
                     elif row[1] != 'non staff replied':
                         do = True
+                    else:
+                        do = False
 
                     if options['TotalMessages'] and do:
 
@@ -146,7 +148,7 @@ async def grapher(options: dict):
                             if time_difference.total_seconds()/60 > 10:
                                 delta_t: timedelta = info['last_time'] - info['start_time']
                                 if delta_t.total_seconds() == 0:
-                                    delta_t = timedelta(minutes=5)
+                                    delta_t = timedelta(minutes = 5 if options['StaffHelp'] else 2)
                                 
                                 if user_id in dictConsecutiveTime:
                                     dictConsecutiveTime[user_id].append(delta_t)
@@ -210,15 +212,14 @@ async def grapher(options: dict):
     if options['StaffHelp']:
         dictTotalMessages['Q'] = total_msgs - dictTotalMessages['S']
 
-    file_reading_time_end = time.time()
-    processing_dicts_time = time.time()
+    file_reading_time_end, processing_dicts_time = time.time(), time.time()
 
-    if options['User'] is True:
-        amount_of_graphs = sum([1 for key, value in options.items() if value and key not in ["FigName", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime", "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate", "Path", "StaffHelp", "Exclude"]])
-    else:
-        amount_of_graphs = 2
-    graph_placements = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)]
-    current_index = 0
+    amount_of_graphs = sum([1 for key, value in options.items() if value and key not in \
+                        ["FigName", "ShowExplanation", "ShowGraphs", "IgnoreMessages", "StartDate", "FileName", "MinMsg", "MinTime",
+                        "UpdateJson", "EndDate", "Percentages", "User", "Output", "Accurate", "Path", "StaffHelp", "Exclude"]]) \
+                        if options['User'] is True else 2
+                        
+    graph_placements, current_index = [((amount_of_graphs + 1)//2, 2, i + 1) for i in range(amount_of_graphs)], 0
 
     print(f'Data from {earliest_date} until {last_date}')
 
