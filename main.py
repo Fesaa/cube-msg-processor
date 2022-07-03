@@ -1,7 +1,11 @@
 import sys
 import asyncio
-from GUI.application import App
 
+from os import chdir, path
+
+chdir(path.dirname(path.abspath(__file__)))
+
+from GUI.application import App
 from init import command_line_options
 from processor.grapher import grapher
 
