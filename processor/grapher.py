@@ -61,7 +61,6 @@ async def grapher(options: dict):
             
             if options['ReplyTimes']:
                 messages_times = []
-                last_staff_time = datetime(year=1, month=1, day=1)
 
             if index == 0:
                 total_msgs = 0
@@ -99,6 +98,7 @@ async def grapher(options: dict):
                 if start_date <= str(current_time.date()) <= end_date and (row[1] == str(options['User']) or options['User'] is True or options['User'] == 'Q'):
                     total_msgs += 1
 
+                    do = False
                     if options['StaffHelp']:
                         if len(row) == 3:
                             if check_staff(roles):
@@ -112,8 +112,6 @@ async def grapher(options: dict):
                                 do = True
                     elif row[1] != 'non staff replied':
                         do = True
-                    else:
-                        do = False
 
                     if options['TotalMessages'] and do:
 
