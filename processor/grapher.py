@@ -311,7 +311,7 @@ async def grapher(options: dict):
 
         print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
 
-        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > (options['MinMsg']/5 if not options['Percentages'] else 1/5 * max(dictDailyMessages.values())) ]))
+        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > (1/5 * max(dictDailyMessages.values()) if not options['Percentages'] else 1/5 * max(dictDailyMessages.values())) ]))
         if len(l0) > 0:
             l1 = [dictDailyMessages[i] for i in l0]
             plt.subplot(*graph_placements[current_index])
@@ -394,7 +394,7 @@ async def grapher(options: dict):
     time_saving_fig0 = time.time()
     while path.exists(f'data/out/{output_file_name}.png'):
         n += 1
-        output_file_name = output_file_name[:-1]
+        output_file_name = output_file_name.split('_')[0] + '_'
         output_file_name += str(n)
     
     plt.savefig(f'data/out/{output_file_name}.png', dpi=500)
