@@ -83,7 +83,10 @@ async def grapher(options: dict):
                     last_date = end_date
 
             for row in [first_row] + list(reader):
-                current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
+                try:
+                    current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')
+                except ValueError:
+                    current_time = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S')
                 if len(row) == 3:
                     roles = ast.literal_eval(row[2])
                 else:
@@ -126,7 +129,10 @@ async def grapher(options: dict):
                                 dictTotalMessages[row[1]] = 1
 
                     if (options['Daily'] or options['User'] is not True) and do:
-                        day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
+                        try:
+                           day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f').date()
+                        except ValueError:
+                            day = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').date()
                         if day in dictDaily.keys():
                             dictDaily[day] += 1
                         else:
