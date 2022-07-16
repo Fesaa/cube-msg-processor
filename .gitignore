@@ -5,3 +5,4 @@ __pycache__
 .vscode
 !external_id_cache.json
 !20220530-20220613_0.png
+venv
