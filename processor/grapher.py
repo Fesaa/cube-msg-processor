@@ -244,7 +244,7 @@ async def grapher(options: dict):
         if options['MinMsg']:
             l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > options['MinMsg'] if not options['Percentages'] and options['User'] is True else dictTotalMessages[i] > 1)]))
         else:
-            l0 = list(reversed([i for i in list(dictTotalMessages.keys())[:25]]))
+            l0 = list(reversed([i for i in list(dictTotalMessages.keys())[:25] if i not in ['Q', 'S']]))
 
         if len(l0) > 0:
             l1 = [dictTotalMessages[key] for key in l0]
@@ -384,7 +384,7 @@ async def grapher(options: dict):
     
     print(summary)
     plt.subplots_adjust(left=0.1, bottom=0.10, right=0.9, top=0.93 if options['User'] is True else 0.80, wspace=0.2, hspace=0.2)
-    plt.suptitle(f'Data from {earliest_date} until {current_time.date() if str(current_time.date()) < options["EndDate"] else options["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(options["User"], not options["UpdateJson"]) if options["User"] is not True else ""}',
+    plt.suptitle(f'Data from {earliest_date} until {last_date if last_date < options["EndDate"] else options["EndDate"]}. Times are CET\nTotal messages: {total_msgs}' + f'\n{"Info on user " + await get_name_from_id(options["User"], not options["UpdateJson"]) if options["User"] is not True else ""}',
     color = 'midnightblue')
 
     processing_dicts_time_end = time.time()
