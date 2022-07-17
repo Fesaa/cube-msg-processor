@@ -241,7 +241,7 @@ async def grapher(options: dict):
         summary += "Top 3 Users with most messages\n\t" + \
                 "".join(f"{key}: {dictTotalMessages[key]}".ljust(25) if not options['Percentages'] else f"{key}: {round(dictTotalMessages[key], 3)}%".ljust(25) for key in list([i for i in dictTotalMessages.keys() if i not in ['Q', 'S']])[:3]) + "\n\n"
 
-        if options['Minmsg']:
+        if options['MinMsg']:
             l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > options['MinMsg'] if not options['Percentages'] and options['User'] is True else dictTotalMessages[i] > 1)]))
         else:
             l0 = list(reversed([i for i in dictTotalMessages.keys()[:25]]))
