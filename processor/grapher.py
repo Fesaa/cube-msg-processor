@@ -241,7 +241,11 @@ async def grapher(options: dict):
         summary += "Top 3 Users with most messages\n\t" + \
                 "".join(f"{key}: {dictTotalMessages[key]}".ljust(25) if not options['Percentages'] else f"{key}: {round(dictTotalMessages[key], 3)}%".ljust(25) for key in list([i for i in dictTotalMessages.keys() if i not in ['Q', 'S']])[:3]) + "\n\n"
 
-        l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > options['MinMsg'] if not options['Percentages'] and options['User'] is True else dictTotalMessages[i] > 1)]))
+        if options['Minmsg']:
+            l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > options['MinMsg'] if not options['Percentages'] and options['User'] is True else dictTotalMessages[i] > 1)]))
+        else:
+            l0 = list(reversed([i for i in dictTotalMessages.keys()[:25]]))
+
         if len(l0) > 0:
             l1 = [dictTotalMessages[key] for key in l0]
             plt.subplot(*graph_placements[current_index])
@@ -275,7 +279,11 @@ async def grapher(options: dict):
         summary += "Top 3 users with most time spend\n\t" + \
                 "".join(f"{key}: {round(dictConsecutiveTime[key], 2)}".ljust(25) for key in list(dictConsecutiveTime.keys())[:3]) + "\n\n"
 
-        l0 = list(reversed([key for key, value in dictConsecutiveTime.items() if value > options['MinTime']]))
+        if options['MinTime']:
+            l0 = list(reversed([key for key, value in dictConsecutiveTime.items() if value > options['MinTime']]))
+        else:
+            l0 = list(reversed([i for i in dictConsecutiveTime.keys()[:25]]))
+
         if len(l0) > 0:
             l1 = [dictConsecutiveTime[key] for key in l0]
             plt.subplot(*graph_placements[current_index])
@@ -317,7 +325,7 @@ async def grapher(options: dict):
 
         print(f'{Fore.MAGENTA}DailyMessages{Style.RESET_ALL}:\n'+"".join([i.ljust(30) if (index + 1) % 2 != 0 else i + '\n' for index, i in enumerate(f"{key}: {round(value, 2)}" for key, value in dictDailyMessages.items())]))
 
-        l0 = list(reversed([i for i in dictDailyMessages.keys() if dictDailyMessages[i] > (1/5 * max(dictDailyMessages.values()) if not options['Percentages'] else 1/5 * max(dictDailyMessages.values())) ]))
+        l0 = list(reversed([i for i in dictDailyMessages.keys()[:25]]))
         if len(l0) > 0:
             l1 = [dictDailyMessages[i] for i in l0]
             plt.subplot(*graph_placements[current_index])
