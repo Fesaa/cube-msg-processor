@@ -244,7 +244,7 @@ async def grapher(options: dict):
         if options['MinMsg']:
             l0 = list(reversed([i for i in dictTotalMessages.keys() if i not in ['Q', 'S'] and (dictTotalMessages[i] > options['MinMsg'] if not options['Percentages'] and options['User'] is True else dictTotalMessages[i] > 1)]))
         else:
-            l0 = list(reversed([i for i in dictTotalMessages.keys()[:25]]))
+            l0 = list(reversed([i for i in list(dictTotalMessages.keys())[:25]]))
 
         if len(l0) > 0:
             l1 = [dictTotalMessages[key] for key in l0]
@@ -282,7 +282,7 @@ async def grapher(options: dict):
         if options['MinTime']:
             l0 = list(reversed([key for key, value in dictConsecutiveTime.items() if value > options['MinTime']]))
         else:
-            l0 = list(reversed([i for i in dictConsecutiveTime.keys()[:25]]))
+            l0 = list(reversed([i for i in list(dictConsecutiveTime.keys())[:25]]))
 
         if len(l0) > 0:
             l1 = [dictConsecutiveTime[key] for key in l0]
